@@ -1,2 +1,8 @@
-/venv
-*.las
+*.so
+*.cu.o
+*.pyc
+*tfrecord
+logs/
+.DS_Store*
+.vscode/
+__pycache__/
