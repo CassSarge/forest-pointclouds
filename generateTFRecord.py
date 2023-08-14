@@ -18,8 +18,8 @@ if __name__ == '__main__':
 
     print("Generating features...")
     feature = {
-		'scan/points' : float_list_feature(np.squeeze(features[:, :3].reshape(-1, 1))),
-		'label/points' : float_list_feature(np.squeeze(labels[:].reshape(-1, 1))),
+		'points' : float_list_feature(np.squeeze(features[:, :3].reshape(-1, 1))),
+		'labels' : float_list_feature(np.squeeze(labels[:].reshape(-1, 1))),
 	}
 
     example = tf.train.Example(features=tf.train.Features(feature=feature))
