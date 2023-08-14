@@ -5,37 +5,66 @@ from pnet2_layers.layers import Pointnet_SA
 import numpy as np
 import pickle
 from models.sem_seg_model import SEM_SEG_Model
+import os
 
-  
-def load_dataset():
-    with open("data/plot_annotations.p", "rb") as f:
-        annotations = pickle.load(f)
-    data = np.asarray(annotations)
-    features = data[:, 0:3] # x, y, z
-    labels = data[:, 3] # label
-    return features, labels
 
-def generate_dataset(features, labels, batch_size):
+def load_dataset(in_file, batch_size):
 
+    assert os.path.isfile(in_file), '[Error] Dataset path not found'
+
+    n_points = 8192
     shuffle_buffer = 1000
+    
+    def _extract_fn(data_record):
 
-    dataset = tf.data.Dataset.from_tensor_slices((features, labels))
-    # x = features[:, 0]
-    # y = features[:, 1]
-    # z = features[:, 2]
+        in_features = {
+            # 'points': tf.io.FixedLenFeature([n_points * 3], tf.float32),
+            # 'labels': tf.io.FixedLenFeature([n_points], tf.float32)
+            'points': tf.io.FixedLenSequenceFeature([], tf.float32, allow_missing=True),
+            'labels': tf.io.FixedLenSequenceFeature([], tf.float32, allow_missing=True)
+        }
 
-    # dataset = tf.data.Dataset.from_tensor_slices((x,y,z,labels))
+        return tf.io.parse_single_example(data_record, in_features)
 
+    def _preprocess_fn(sample):
+
+        points = sample['points']
+        labels = sample['labels']
+
+        points = tf.reshape(points, (n_points, 3))
+        labels = tf.reshape(labels, (n_points, 1))
+
+        shuffle_idx = tf.range(points.shape[0])
+        shuffle_idx = tf.random.shuffle(shuffle_idx)
+        points = tf.gather(points, shuffle_idx)
+        labels = tf.gather(labels, shuffle_idx)
+
+        return points, labels
+
+    dataset = tf.data.TFRecordDataset(in_file)
     dataset = dataset.shuffle(shuffle_buffer)
+    dataset = dataset.map(_extract_fn)
+
+    for raw_record in dataset.take(10):
+        print(repr(raw_record))
+    print("___________________________")
+
+    # dataset = dataset.map(_preprocess_fn)
     dataset = dataset.batch(batch_size, drop_remainder=True)
+
+    for raw_record in dataset.take(10):
+        print(repr(raw_record))
+
 
     return dataset
 
 
-def train(training_dataset: tf.data.Dataset):
+def train():
 
     model = SEM_SEG_Model(config['batch_size'], config['num_classes'], config['bn'])
     
+    training_dataset = load_dataset(config['train_ds'], config['batch_size'])
+
     callbacks = [
         keras.callbacks.TensorBoard(
             './logs/{}'.format(config['log_dir']), update_freq=50),
@@ -72,20 +101,16 @@ if __name__ == '__main__':
 
     # Parameters for the model and training
     config = {
-        # 'train_ds' : 'data/scannet_train.tfrecord',
+         'train_ds' : 'data/plot_annotations.tfrecord',
         # 'val_ds' : 'data/scannet_val.tfrecord',
         'log_dir' : 'trees_1',
         'log_freq' : 10,
         'test_freq' : 100,
         'batch_size' : 4,
-        'num_classes' : 21,
+        'num_classes' : 4,
         'lr' : 0.001,
         'bn' : False,
     }
 
-    features, labels = load_dataset()
-    
-    # Generate a Dataset object from tensorflow using our features and labels
-    dataset = generate_dataset(features, labels, config['batch_size'])
 
-    train(dataset)
+    train()
