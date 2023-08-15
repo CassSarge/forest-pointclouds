@@ -13,7 +13,8 @@ def load_dataset(in_file, batch_size):
     assert os.path.isfile(in_file), '[Error] Dataset path not found'
 
     # n_points = 8192
-    n_points = 10829404
+    # n_points = 10829404
+    n_points = 10000
 
     shuffle_buffer = 1000
     
@@ -46,17 +47,8 @@ def load_dataset(in_file, batch_size):
     dataset = tf.data.TFRecordDataset(in_file)
     dataset = dataset.shuffle(shuffle_buffer)
     dataset = dataset.map(_extract_fn)
-
-    for raw_record in dataset.take(10):
-        print(repr(raw_record))
-    print("___________________________")
-
     dataset = dataset.map(_preprocess_fn)
     dataset = dataset.batch(batch_size, drop_remainder=True)
-
-    for raw_record in dataset.take(10):
-        print(repr(raw_record))
-
 
     return dataset
 
@@ -71,7 +63,7 @@ def train():
         keras.callbacks.TensorBoard(
             './logs/{}'.format(config['log_dir']), update_freq=50),
         keras.callbacks.ModelCheckpoint(
-            './logs/{}/model/weights'.format(config['log_dir']), 'val_sparse_categorical_accuracy', save_best_only=True)
+            './logs/{}/model/weights'.format(config['log_dir']), monitor='sparse_categorical_accuracy', save_best_only=True)
     ]
 
     model.build((config['batch_size'], 8192, 3))
@@ -83,15 +75,15 @@ def train():
         metrics=[keras.metrics.SparseCategoricalAccuracy()]
     )
 
-    model.fit(
+    hist = model.fit(
         training_dataset,
         # validation_data=val_ds,
         # validation_steps=10,
         # validation_freq=1,
         callbacks=callbacks,
-        epochs=1,
+        epochs=100,
         verbose=1,
-        steps_per_epoch=5
+        # steps_per_epoch=3
     )
 
 if __name__ == '__main__':
@@ -104,7 +96,7 @@ if __name__ == '__main__':
 
     # Parameters for the model and training
     config = {
-         'train_ds' : 'data/plot_annotations.tfrecord',
+         'train_ds' : 'data/limited_plot_annotations.tfrecord',
         # 'val_ds' : 'data/scannet_val.tfrecord',
         'log_dir' : 'trees_1',
         'log_freq' : 10,
@@ -115,5 +107,8 @@ if __name__ == '__main__':
         'bn' : False,
     }
 
+    print("____________________________________________")
+    print("Have you checked you are using the correct number of points and the correct tfrecord file?")
+    print("____________________________________________")
 
     train()
