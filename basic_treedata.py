@@ -12,16 +12,18 @@ def load_dataset(in_file, batch_size):
 
     assert os.path.isfile(in_file), '[Error] Dataset path not found'
 
-    n_points = 8192
+    # n_points = 8192
+    n_points = 10829404
+
     shuffle_buffer = 1000
     
     def _extract_fn(data_record):
 
         in_features = {
-            # 'points': tf.io.FixedLenFeature([n_points * 3], tf.float32),
-            # 'labels': tf.io.FixedLenFeature([n_points], tf.float32)
-            'points': tf.io.FixedLenSequenceFeature([], tf.float32, allow_missing=True),
-            'labels': tf.io.FixedLenSequenceFeature([], tf.float32, allow_missing=True)
+            'points': tf.io.FixedLenFeature([n_points * 3], tf.float32),
+            'labels': tf.io.FixedLenFeature([n_points], tf.float32)
+            # 'points': tf.io.FixedLenSequenceFeature([], tf.float32, allow_missing=True),
+            # 'labels': tf.io.FixedLenSequenceFeature([], tf.float32, allow_missing=True)
         }
 
         return tf.io.parse_single_example(data_record, in_features)
@@ -49,7 +51,7 @@ def load_dataset(in_file, batch_size):
         print(repr(raw_record))
     print("___________________________")
 
-    # dataset = dataset.map(_preprocess_fn)
+    dataset = dataset.map(_preprocess_fn)
     dataset = dataset.batch(batch_size, drop_remainder=True)
 
     for raw_record in dataset.take(10):
@@ -88,7 +90,8 @@ def train():
         # validation_freq=1,
         callbacks=callbacks,
         epochs=1,
-        verbose=1
+        verbose=1,
+        steps_per_epoch=5
     )
 
 if __name__ == '__main__':
@@ -106,7 +109,7 @@ if __name__ == '__main__':
         'log_dir' : 'trees_1',
         'log_freq' : 10,
         'test_freq' : 100,
-        'batch_size' : 4,
+        'batch_size' : 1,
         'num_classes' : 4,
         'lr' : 0.001,
         'bn' : False,
