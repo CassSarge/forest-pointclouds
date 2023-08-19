@@ -14,7 +14,7 @@ def load_dataset(in_file, batch_size):
 
     # n_points = 8192
     # n_points = 10829404
-    n_points = 10000
+    n_points = 100000
 
     shuffle_buffer = 1000
     
@@ -23,8 +23,6 @@ def load_dataset(in_file, batch_size):
         in_features = {
             'points': tf.io.FixedLenFeature([n_points * 3], tf.float32),
             'labels': tf.io.FixedLenFeature([n_points], tf.float32)
-            # 'points': tf.io.FixedLenSequenceFeature([], tf.float32, allow_missing=True),
-            # 'labels': tf.io.FixedLenSequenceFeature([], tf.float32, allow_missing=True)
         }
 
         return tf.io.parse_single_example(data_record, in_features)
@@ -58,6 +56,7 @@ def train():
     model = SEM_SEG_Model(config['batch_size'], config['num_classes'], config['bn'])
     
     training_dataset = load_dataset(config['train_ds'], config['batch_size'])
+    validation_dataset = load_dataset(config['val_ds'], config['batch_size'])
 
     callbacks = [
         keras.callbacks.TensorBoard(
@@ -77,7 +76,7 @@ def train():
 
     hist = model.fit(
         training_dataset,
-        # validation_data=val_ds,
+        validation_data=validation_dataset,
         # validation_steps=10,
         # validation_freq=1,
         callbacks=callbacks,
@@ -96,12 +95,12 @@ if __name__ == '__main__':
 
     # Parameters for the model and training
     config = {
-         'train_ds' : 'data/limited_plot_annotations.tfrecord',
-        # 'val_ds' : 'data/scannet_val.tfrecord',
+         'train_ds' : 'data/plot_annotations_training.tfrecord',
+        'val_ds' : 'data/plot_annotations_validation.tfrecord',
         'log_dir' : 'trees_1',
         'log_freq' : 10,
         'test_freq' : 100,
-        'batch_size' : 1,
+        'batch_size' : 10,
         'num_classes' : 4,
         'lr' : 0.001,
         'bn' : False,
