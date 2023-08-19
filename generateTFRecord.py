@@ -2,14 +2,14 @@ import tensorflow as tf
 import numpy as np
 import pickle
 
-def load_dataset(data_end):
+def load_dataset():
     with open("data/plot_annotations.p", "rb") as f:
         annotations = pickle.load(f)
     data = np.asarray(annotations)
     # Going up to 10 million out of the slightly higher total
     # because it makes it divisible easily
-    features = data[:data_end, 0:3] # x, y, z
-    labels = data[:data_end, 3] # label
+    features = data[:, 0:3] # x, y, z
+    labels = data[:, 3] # label
 
     print(len(features))
     return features, labels
@@ -28,20 +28,15 @@ def example_from_data(features, labels, point_start: int, point_end: int):
 
     return example
 
-if __name__ == '__main__':
-    data_end = 10000000
-
-    features, labels = load_dataset(data_end)
-
-    example_size = 100000
-    start_pt = 0
-    end_pt = start_pt + example_size
+def generate_training_set(features, labels, example_size: int, training_end: int):
+    features = features[:training_end,:]
+    labels = labels[:training_end]
     
-    print("Creating TFRecord file...")
+    print("Creating training TFRecord file...")
     
-    with tf.io.TFRecordWriter("data/plot_annotations.tfrecord") as writer:
-        for i in range(int(data_end // example_size)):
-            print("Writing example {} of {}".format(i, int(data_end // example_size)))
+    with tf.io.TFRecordWriter("data/plot_annotations_training.tfrecord") as writer:
+        for i in range(int(training_end // example_size)):
+            print("Writing training example {} of {}".format(i, int(training_end // example_size)))
             start_pt = i * example_size
             end_pt = start_pt + example_size
             
@@ -50,3 +45,34 @@ if __name__ == '__main__':
 
 
     print("Done!")
+
+def generate_validation_set(features, labels, example_size: int, training_end: int, validation_end: int):
+    features = features[training_end:validation_end,:]
+    labels = labels[training_end:validation_end]
+    data_length = (validation_end - training_end )
+
+    print("Creating validation TFRecord file...")
+    
+    with tf.io.TFRecordWriter("data/plot_annotations_validation.tfrecord") as writer:
+        for i in range(int(data_length// example_size)):
+            print("Writing validation example {} of {}".format(i, int(data_length // example_size)))
+            start_pt = i * example_size
+            end_pt = start_pt + example_size
+            
+            example = example_from_data(features, labels, start_pt, end_pt)
+            writer.write(example.SerializeToString())
+
+    print("Done!")
+
+
+if __name__ == '__main__':
+
+    features, labels = load_dataset()
+
+    example_size = 100000
+    training_end = 8000000
+    validation_end = 10000000
+
+    generate_training_set(features, labels, example_size, training_end)
+
+    generate_validation_set(features, labels, example_size, training_end, validation_end)
