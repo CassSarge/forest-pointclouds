@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 import pickle
 
-def load_dataset():
+def load_dataset(split: bool = True):
     with open("data/plot_annotations.p", "rb") as f:
         annotations = pickle.load(f)
     data = np.asarray(annotations)
@@ -11,8 +11,10 @@ def load_dataset():
     features = data[:, 0:3] # x, y, z
     labels = data[:, 3] # label
 
-    print(len(features))
-    return features, labels
+    if split:
+        return features, labels
+    else:
+        return data
 
 def float_list_feature(value):
 	return tf.train.Feature(float_list=tf.train.FloatList(value=value))
@@ -22,6 +24,17 @@ def example_from_data(features, labels, point_start: int, point_end: int):
     feature = {
 		'points' : float_list_feature(np.squeeze(features[point_start:point_end, :3].reshape(-1, 1))),
 		'labels' : float_list_feature(np.squeeze(labels[point_start:point_end].reshape(-1, 1))),
+	}
+
+    example = tf.train.Example(features=tf.train.Features(feature=feature))
+
+    return example
+
+def basic_example_from_data(features, labels):
+     
+    feature = {
+		'points' : float_list_feature(np.squeeze(features[:, :3].reshape(-1, 1))),
+		'labels' : float_list_feature(np.squeeze(labels[:].reshape(-1, 1))),
 	}
 
     example = tf.train.Example(features=tf.train.Features(feature=feature))
