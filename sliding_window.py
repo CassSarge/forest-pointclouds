@@ -3,12 +3,10 @@ import pickle
 
 from generateTFRecord import load_dataset
 
-def sliding_window(features, labels, window_width: int, stride: int):
-    
+def sliding_window(features, labels, window_width: int, stride: int, sample_size: int = 8192):
+
     start_x = -19
     start_y = -19
-
-
 
     end_x = 19
     end_y = 19
@@ -21,12 +19,16 @@ def sliding_window(features, labels, window_width: int, stride: int):
     while current_y < end_y:
 
         while current_x < end_x:
-
-            # points = features[(features[:,0] >= current_x - window_width) & (features[:,0] < current_x + window_width) & (features[:,1] >= current_y - window_width) & (features[:,1] < current_y + window_width)]
+            # Get points within window
+            current_features = features[(features[:,0] >= current_x - window_width) & (features[:,0] < current_x + window_width) & (features[:,1] >= current_y - window_width) & (features[:,1] < current_y + window_width)]
+            # Get labels within window
+            # current_labels = labels[(features[:,0] >= current_x - window_width) & (features[:,0] < current_x + window_width) & (features[:,1] >= current_y - window_width) & (features[:,1] < current_y + window_width)]
             # Count number of points and print
-            # ^ Check if this criteria thing actually works
+            (num_points, _) = current_features.shape
+            # (num_labels) = current_labels.shape
+            # Point densities range from about 0 to 40000 within a window right now
             # This loop might suck investigate sorting methods?
-            print("i: {}, Current x: {}, Current y: {}".format(i, current_x, current_y))
+            print("i: {}, num_points: {}, Current x: {}, Current y: {}".format(i, num_points, current_x, current_y))
             i += 1
 
             current_x += stride
