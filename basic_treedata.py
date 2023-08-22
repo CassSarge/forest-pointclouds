@@ -12,9 +12,9 @@ def load_dataset(in_file, batch_size):
 
     assert os.path.isfile(in_file), '[Error] Dataset path not found'
 
-    # n_points = 8192
+    n_points = 8192
     # n_points = 10829404
-    n_points = 100000
+    # n_points = 100000
 
     shuffle_buffer = 1000
     
