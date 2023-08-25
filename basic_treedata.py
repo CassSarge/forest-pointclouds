@@ -7,14 +7,30 @@ import pickle
 from models.sem_seg_model import SEM_SEG_Model
 import os
 
+def countRecords(ds:tf.data.Dataset):
+  count = 0
 
-def load_dataset(in_file, batch_size):
+  if tf.executing_eagerly():
+    # TF v2 or v1 in eager mode
+    for r in ds:
+      count = count+1
+  else:  
+    # TF v1 in non-eager mode
+    iterator = tf.compat.v1.data.make_one_shot_iterator(ds)
+    next_batch = iterator.get_next()
+    with tf.compat.v1.Session() as sess:
+      try:
+        while True:
+          sess.run(next_batch)
+          count = count+1    
+      except tf.errors.OutOfRangeError:
+        pass
+  
+  return count
 
-    assert os.path.isfile(in_file), '[Error] Dataset path not found'
+def prepare_data(dataset, batch_size):
 
     n_points = 8192
-    # n_points = 10829404
-    # n_points = 100000
 
     shuffle_buffer = 1000
     
@@ -42,7 +58,6 @@ def load_dataset(in_file, batch_size):
 
         return points, labels
 
-    dataset = tf.data.TFRecordDataset(in_file)
     dataset = dataset.shuffle(shuffle_buffer)
     dataset = dataset.map(_extract_fn)
     dataset = dataset.map(_preprocess_fn)
@@ -53,10 +68,22 @@ def load_dataset(in_file, batch_size):
 
 def train():
 
+
+
     model = SEM_SEG_Model(config['batch_size'], config['num_classes'], config['bn'])
-    
-    training_dataset = load_dataset(config['train_ds'], config['batch_size'])
-    validation_dataset = load_dataset(config['val_ds'], config['batch_size'])
+
+    # Retreive dataset from TFRecord file    
+    assert os.path.isfile(config['train_ds']), '[Error] Dataset path not found'
+    dataset = tf.data.TFRecordDataset(config['train_ds'])
+
+    # Split dataset into 80% training and 20% validation
+    train_length = int(0.8 * countRecords(dataset))
+    dataset_train = dataset.take(train_length)
+    dataset_val = dataset.skip(train_length)
+
+    # Prepare datasets
+    dataset_train = prepare_data(dataset_train, config['batch_size'])
+    dataset_val = prepare_data(dataset_val, config['batch_size'])
 
     callbacks = [
         keras.callbacks.TensorBoard(
@@ -75,9 +102,9 @@ def train():
     )
 
     hist = model.fit(
-        training_dataset,
-        validation_data=validation_dataset,
-        # validation_steps=10,
+        dataset_train,
+        validation_data=dataset_val,
+        validation_steps=10,
         # validation_freq=1,
         callbacks=callbacks,
         epochs=100,
@@ -95,8 +122,8 @@ if __name__ == '__main__':
 
     # Parameters for the model and training
     config = {
-         'train_ds' : 'data/plot_annotations_training.tfrecord',
-        'val_ds' : 'data/plot_annotations_validation.tfrecord',
+         'train_ds' : 'data/full_w_subsampling.tfrecord', # 97190 examples, 20% is 19438
+        # 'val_ds' : 'data/plot_annotations_validation.tfrecord',
         'log_dir' : 'trees_1',
         'log_freq' : 10,
         'test_freq' : 100,
@@ -109,5 +136,8 @@ if __name__ == '__main__':
     print("____________________________________________")
     print("Have you checked you are using the correct number of points and the correct tfrecord file?")
     print("____________________________________________")
+
+    c = 0
+
 
     train()
