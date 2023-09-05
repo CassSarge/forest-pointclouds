@@ -43,11 +43,11 @@ def sliding_window(full_data, window_width: int, stride: int, sample_size: int =
                 # Point densities range from about 0 to 40000 within a window right now
                 # Choose a random subsample of these
                 if num_points > sample_size:
-                    subsample_to_TFrecord(writer, current_data, sample_size, 30, rng)
+                    subsample_to_TFrecord(writer, current_data, sample_size, 20, rng)
                 # Else if there are less than 8192 points, but more than 4096, we'll upsample
                 elif num_points > sample_size / 2:
                     # Only sample a bit if theres a low number of points
-                    subsample_to_TFrecord(writer, current_data, sample_size, 5, rng)
+                    subsample_to_TFrecord(writer, current_data, sample_size, 3, rng)
                 else:
                     pass
                 
