@@ -75,7 +75,10 @@ def train():
 	model.compile(
 		optimizer=keras.optimizers.Adam(config['lr']),
 		loss=keras.losses.SparseCategoricalCrossentropy(),
-		metrics=[keras.metrics.SparseCategoricalAccuracy()]
+		metrics=[keras.metrics.SparseCategoricalAccuracy(), 
+		   keras.metrics.IoU(num_classes=config['num_classes'],
+					   target_class_ids=[i for i in range(config['num_classes'])],
+						  sparse_y_true=True, sparse_y_pred=False, name="MeanIoU")]
 	)
 
 	model.fit(
@@ -92,7 +95,7 @@ def train():
 if __name__ == '__main__':
 
 	tempconfig = tf.compat.v1.ConfigProto()
-	tempconfig.gpu_options.per_process_gpu_memory_fraction = 0.9  # 0.6 sometimes works better for folks
+	tempconfig.gpu_options.per_process_gpu_memory_fraction = 0.8  # 0.6 sometimes works better for folks
 	tempconfig.gpu_options.allow_growth = True
 	set_session(tf.compat.v1.Session(config=tempconfig))
 
