@@ -15,7 +15,7 @@ def subsample_to_TFrecord(writer, data, sample_size, n_subsamples, randomizer, r
 
     return
 
-def sliding_window(full_data, window_width: int, overlap: float= 0.3, sample_size: int = 8192):
+def sliding_window(file_location, full_data, window_width: int, sample_num: int, overlap: float= 0.3, sample_size: int = 8192):
 
     start_x = -20
     start_y = -20
@@ -26,12 +26,12 @@ def sliding_window(full_data, window_width: int, overlap: float= 0.3, sample_siz
     current_x = start_x
     current_y = start_y
     
-    stride = int((1-overlap)*window_width)
+    stride = (1-overlap)*window_width
 
     i = 0
 
     rng = np.random.default_rng(12345)
-    with tf.io.TFRecordWriter("data/full_w_subsampling.tfrecord") as writer:
+    with tf.io.TFRecordWriter(file_location) as writer:
 
         while current_y < end_y:
 
@@ -45,7 +45,7 @@ def sliding_window(full_data, window_width: int, overlap: float= 0.3, sample_siz
                 # Point densities range from about 0 to 40000 within a window right now
                 # Choose a random subsample of these
                 if num_points > sample_size:
-                    subsample_to_TFrecord(writer, current_data, sample_size, 20, rng)
+                    subsample_to_TFrecord(writer, current_data, sample_size, sample_num, rng)
                 # Else if there are less than 8192 points, but more than 4096, we'll upsample
                 elif num_points > sample_size / 2:
                     # Only sample once if there is a low number of points, and use replacement
@@ -88,16 +88,23 @@ if __name__ == '__main__':
     # Load the data without labels and other separated
     full_data = load_dataset(split = False)
 
-    print("{}".format(type((full_data[:,0] >= -20) & (full_data[:,0] < 0) & (full_data[:,1] >= 0) & (full_data[:,1] < 20))))
-
+    # Split training and validation data
     training_data, validation_data = split_validation_data(full_data)
   
-    # Length of full data
+    # Length of data
     print("Full data length: {}".format(len(full_data)))
     print("training_data length: {}".format(len(training_data)))
     print("validation_data length: {}".format(len(validation_data)))
     
     # Roughly an 80/20 training data split (22.7% validation data)
 
-    # sliding_window(full_data, 1, 0.5)
+    # Set window width for current experiment
+    window_width = 3
+    print("Window width for current experiment: {}m".format(window_width))
+    
+    print("Packaging training data...")
+    sliding_window(file_location="data/training_data.tfrecord", full_data=training_data, window_width=window_width, sample_num=20)
+
+    print("Packaging validation data...")
+    sliding_window(file_location="data/validation_data.tfrecord", full_data=validation_data, window_width=window_width, sample_num=1)
 
