@@ -2,8 +2,6 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.compat.v1.keras.backend import set_session
 from pnet2_layers.layers import Pointnet_SA
-import numpy as np
-import pickle
 from models.sem_seg_model import SEM_SEG_Model
 import os
 
@@ -68,8 +66,6 @@ def prepare_data(dataset, batch_size):
 
 def train():
 
-
-
     model = SEM_SEG_Model(config['batch_size'], config['num_classes'], config['bn'])
 
     # Retreive dataset from TFRecord file    
@@ -98,18 +94,53 @@ def train():
     model.compile(
         optimizer=keras.optimizers.Adam(config['lr']),
         loss=keras.losses.SparseCategoricalCrossentropy(),
-        metrics=[keras.metrics.SparseCategoricalAccuracy()]
+        metrics=[keras.metrics.SparseCategoricalAccuracy(),
+                 keras.metrics.IoU(
+                    name="meanIoU",
+                    num_classes=config['num_classes'],
+                    target_class_ids = [0,1,2,3],
+                    sparse_y_true=True, 
+                    sparse_y_pred=False
+                 ),
+                 keras.metrics.IoU(
+                    name="FoliageIoU",
+                    num_classes=config['num_classes'],
+                    target_class_ids = [0],
+                    sparse_y_true=True, 
+                    sparse_y_pred=False
+                 ),
+                 keras.metrics.IoU(
+                    name="StemIoU",
+                    num_classes=config['num_classes'],
+                    target_class_ids = [1],
+                    sparse_y_true=True, 
+                    sparse_y_pred=False
+                 ),
+                 keras.metrics.IoU(
+                    name="GroundIoU",
+                    num_classes=config['num_classes'],
+                    target_class_ids = [2],
+                    sparse_y_true=True, 
+                    sparse_y_pred=False
+                 ),
+                 keras.metrics.IoU(
+                    name="UndergrowthIoU",
+                    num_classes=config['num_classes'],
+                    target_class_ids = [3],
+                    sparse_y_true=True, 
+                    sparse_y_pred=False
+                 )]
     )
 
     hist = model.fit(
         dataset_train,
         validation_data=dataset_val,
-        validation_steps=10,
+        # validation_steps= train_length // config['batch_size'],
         # validation_freq=1,
         callbacks=callbacks,
-        epochs=100,
+        epochs=10,
         verbose=1,
-        # steps_per_epoch=3
+        # steps_per_epoch=train_length // config['batch_size']
     )
 
 if __name__ == '__main__':
@@ -122,12 +153,12 @@ if __name__ == '__main__':
 
     # Parameters for the model and training
     config = {
-         'train_ds' : 'data/full_w_subsampling.tfrecord', # 97190 examples, 20% is 19438
+         'train_ds' : 'data/plot_annotations_training.tfrecord', # 97190 examples, 20% is 19438
         # 'val_ds' : 'data/plot_annotations_validation.tfrecord',
-        'log_dir' : 'trees_1',
+        'log_dir' : 'trees_full',
         'log_freq' : 10,
         'test_freq' : 100,
-        'batch_size' : 10,
+        'batch_size' : 20,
         'num_classes' : 4,
         'lr' : 0.001,
         'bn' : False,
@@ -136,8 +167,6 @@ if __name__ == '__main__':
     print("____________________________________________")
     print("Have you checked you are using the correct number of points and the correct tfrecord file?")
     print("____________________________________________")
-
-    c = 0
 
 
     train()
