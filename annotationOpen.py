@@ -24,11 +24,13 @@ if __name__ == '__main__':
     data = np.asarray(annotations)
     print(data.shape) # (10829404, 4) (x, y, z, label)
     print(type(data)) # numpy.ndarray
+    print(data[1:200, :]) # (10829404, 4) (x, y, z, label
+
     features = data[:, 0:3] # Features between 
     labels = data[:, 3] 
     print(features.shape) # (10829404, 3)
     print(labels.shape) # (10829404,)
-    print(features[1, :3]) #
+    print(features[1:50, :3]) #
     print(labels[1:50])
 
     print(type(features))
