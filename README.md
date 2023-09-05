@@ -11,5 +11,5 @@ python train_scannet.py
 For real usage
 ```
 conda activate tf
-python train_treeplot.py
+python basic_treedata.py
 ```
