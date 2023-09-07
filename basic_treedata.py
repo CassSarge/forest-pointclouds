@@ -46,8 +46,8 @@ def prepare_data(dataset, batch_size):
         points = sample['points']
         labels = sample['labels']
 
-        points = tf.reshape(points, (n_points, 3))
-        labels = tf.reshape(labels, (n_points, 1))
+        points = tf.reshape(points, shape=(n_points, 3))
+        labels = tf.reshape(labels, shape=(n_points, 1))
 
         shuffle_idx = tf.range(points.shape[0])
         shuffle_idx = tf.random.shuffle(shuffle_idx)
@@ -70,12 +70,9 @@ def train():
 
     # Retreive dataset from TFRecord file    
     assert os.path.isfile(config['train_ds']), '[Error] Dataset path not found'
-    dataset = tf.data.TFRecordDataset(config['train_ds'])
-
-    # Split dataset into 80% training and 20% validation
-    train_length = int(0.8 * countRecords(dataset))
-    dataset_train = dataset.take(train_length)
-    dataset_val = dataset.skip(train_length)
+    
+    dataset_train= tf.data.TFRecordDataset(config['train_ds'])
+    dataset_val= tf.data.TFRecordDataset(config['val_ds'])
 
     # Prepare datasets
     dataset_train = prepare_data(dataset_train, config['batch_size'])
@@ -85,16 +82,20 @@ def train():
         keras.callbacks.TensorBoard(
             './logs/{}'.format(config['log_dir']), update_freq=50),
         keras.callbacks.ModelCheckpoint(
-            './logs/{}/model/weights'.format(config['log_dir']), monitor='sparse_categorical_accuracy', save_best_only=True)
+            './logs/{}/model/weights'.format(config['log_dir']), monitor='sparse_cat_acc', save_best_only=True, save_weights_only=True)
     ]
 
     model.build((config['batch_size'], 8192, 3))
+
+    # model.compute_output_shape(input_shape=(config['batch_size'], 8192, 3))
+
     print(model.summary())
 
     model.compile(
         optimizer=keras.optimizers.Adam(config['lr']),
         loss=keras.losses.SparseCategoricalCrossentropy(),
-        metrics=[keras.metrics.SparseCategoricalAccuracy(),
+        run_eagerly=True,
+        metrics=[keras.metrics.SparseCategoricalAccuracy(name="sparse_cat_acc"),
                  keras.metrics.IoU(
                     name="meanIoU",
                     num_classes=config['num_classes'],
@@ -145,6 +146,7 @@ def train():
 
 if __name__ == '__main__':
 
+    tf.compat.v1.enable_eager_execution()
     # Set it up such that only 90% of the GPU memory is used, prevents crashing
     tempconfig = tf.compat.v1.ConfigProto()
     tempconfig.gpu_options.per_process_gpu_memory_fraction = 0.9  # 0.6 sometimes works better for folks
@@ -153,12 +155,12 @@ if __name__ == '__main__':
 
     # Parameters for the model and training
     config = {
-         'train_ds' : 'data/plot_annotations_training.tfrecord', # 97190 examples, 20% is 19438
-        # 'val_ds' : 'data/plot_annotations_validation.tfrecord',
+        'train_ds' : 'data/training_data.tfrecord', 
+        'val_ds' : 'data/validation_data.tfrecord',
         'log_dir' : 'trees_full',
         'log_freq' : 10,
         'test_freq' : 100,
-        'batch_size' : 20,
+        'batch_size' : 16,
         'num_classes' : 4,
         'lr' : 0.001,
         'bn' : False,
