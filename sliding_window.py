@@ -131,8 +131,7 @@ def split_validation_data(full_data):
 
     return training_data, validation_data
 
-
-if __name__ == '__main__':
+def create_records_using_window(window_width):
     # Min data = -20,-20, 0
     # Max data = 20, 20, ~55
 
@@ -150,7 +149,6 @@ if __name__ == '__main__':
     # Roughly an 80/20 training data split (22.7% validation data)
 
     # Set window width for current experiment
-    window_width = 3
     print("Window width for current experiment: {}m".format(window_width))
     
     print("Packaging training data...")
@@ -159,3 +157,8 @@ if __name__ == '__main__':
     print("Packaging validation data...")
     sliding_window(file_location="data/validation_data.tfrecord", full_data=validation_data, window_width=window_width, sample_num=1)
 
+
+if __name__ == '__main__':
+
+    window_width = 3
+    create_records_using_window(window_width)
