@@ -56,7 +56,7 @@ def prepare_data(dataset, batch_size):
     return dataset
 
 
-def train():
+def train(config: dict):
 
     model = SEM_SEG_Model(config['batch_size'], config['num_classes'], config['bn'])
 
@@ -151,8 +151,7 @@ def train():
     with open('./logs/{}/trainHistoryDict'.format(config['log_dir']), 'wb') as f:
        pickle.dump(history.history, f)
 
-if __name__ == '__main__':
-
+def setup():
     tf.compat.v1.enable_eager_execution()
     # Set it up such that only 90% of the GPU memory is used, prevents crashing
     tempconfig = tf.compat.v1.ConfigProto()
@@ -173,9 +172,13 @@ if __name__ == '__main__':
         'bn' : True,
     }
 
+    return config
+
+if __name__ == '__main__':
+
+    config = setup()
+    train(config)
+
     print("____________________________________________")
     print("Have you checked you are using the correct number of points and the correct tfrecord file?")
     print("____________________________________________")
-
-
-    train()
