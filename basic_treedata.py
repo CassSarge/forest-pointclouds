@@ -4,6 +4,17 @@ from tensorflow.compat.v1.keras.backend import set_session
 from pnet2_layers.layers import Pointnet_SA
 from models.sem_seg_model import SEM_SEG_Model
 import os
+import matplotlib.pyplot as plt
+
+def plot_result(history, item):
+    plt.plot(history.history[item], label=item)
+    plt.plot(history.history["val_" + item], label="val_" + item)
+    plt.xlabel("Epochs")
+    plt.ylabel(item)
+    plt.title("Train and Validation {} Over Epochs".format(item), fontsize=14)
+    plt.legend()
+    plt.grid()
+    plt.show()
 
 def countRecords(ds:tf.data.Dataset):
   count = 0
@@ -133,16 +144,30 @@ def train():
                  )]
     )
 
-    hist = model.fit(
+    train_length = dataset_train.reduce(0, lambda x, _: x + 1)
+    val_length = dataset_val.reduce(0, lambda x, _: x + 1)
+
+    print("Train length: {}".format(train_length))
+    print("Val length: {}".format(val_length))
+
+    history = model.fit(
         dataset_train,
         validation_data=dataset_val,
         # validation_steps= train_length // config['batch_size'],
         # validation_freq=1,
         callbacks=callbacks,
-        epochs=10,
+        epochs=50,
         verbose=1,
         # steps_per_epoch=train_length // config['batch_size']
     )
+
+    plot_result(history, "loss")
+    plot_result(history, "sparse_cat_acc")
+    plot_result(history, "meanIoU")
+    plot_result(history, "FoliageIoU")
+    plot_result(history, "StemIoU")
+    plot_result(history, "GroundIoU")
+    plot_result(history, "UndergrowthIoU")
 
 if __name__ == '__main__':
 
@@ -157,13 +182,13 @@ if __name__ == '__main__':
     config = {
         'train_ds' : 'data/training_data.tfrecord', 
         'val_ds' : 'data/validation_data.tfrecord',
-        'log_dir' : 'trees_full',
+        'log_dir' : 'trees_new',
         'log_freq' : 10,
         'test_freq' : 100,
         'batch_size' : 16,
         'num_classes' : 4,
         'lr' : 0.001,
-        'bn' : False,
+        'bn' : True,
     }
 
     print("____________________________________________")
