@@ -4,25 +4,44 @@ import tensorflow as tf
 
 from generateTFRecord import load_dataset, basic_example_from_data
 
-def centre_data(subsampled_data):
+def centre_data(data):
     # Centre the data around the origin
     # Find the mean of the x and y coordinates
-    mean_x = np.mean(subsampled_data[:,0])
-    mean_y = np.mean(subsampled_data[:,1])
+    mean_x = np.mean(data[:,0])
+    mean_y = np.mean(data[:,1])
     # Subtract the mean from the x and y coordinates
-    subsampled_data[:,0] -= mean_x
-    subsampled_data[:,1] -= mean_y
+    data[:,0] -= mean_x
+    data[:,1] -= mean_y
 
-    return subsampled_data
+    return data
+
+def normalise_data(data):
+    # Normalise the xyz coordinates between -1 and 1
+    # Find the max and min of the x,y and z coordinates
+    max_x = np.max(data[:,0])
+    min_x = np.min(data[:,0])
+    max_y = np.max(data[:,1])
+    min_y = np.min(data[:,1])
+    max_z = np.max(data[:,2])
+    min_z = np.min(data[:,2])
+    # Normalise the x,y and z coordinates between -1 and 1
+    data[:,0] = (((data[:,0] - min_x) / (max_x - min_x)) * 2) - 1
+    data[:,1] = (((data[:,1] - min_y) / (max_y - min_y)) * 2) - 1
+    data[:,2] = (((data[:,2] - min_z) / (max_z - min_z)) * 2) - 1
+
+    return data
 
 def subsample_to_TFrecord(writer, data, sample_size, n_subsamples, randomizer, replacement = False):
+
+    # Centre the data around the origin
+    data = centre_data(data)
+    # Normalise the data
+    data = normalise_data(data)
 
     # Repeatedly subsample the data and save it to the TFRecord file
     for i in range(n_subsamples):
         # Subsample the data
         subsampled_data = randomizer.choice(data, sample_size, replace=replacement)
-        # Centre the data around the origin
-        subsampled_data = centre_data(subsampled_data)
         # Create a TFRecord example from the data
         current_example = basic_example_from_data(subsampled_data[:, 0:3], subsampled_data[:, 3])
         writer.write(current_example.SerializeToString())
@@ -55,8 +74,8 @@ def sliding_window(file_location, full_data, window_width: int, sample_num: int,
                 current_data = full_data[(full_data[:,0] >= current_x - window_width) & (full_data[:,0] < current_x + window_width) & (full_data[:,1] >= current_y - window_width) & (full_data[:,1] < current_y + window_width)]
                 # Get labels within window
                 # Count number of points and print
-                (num_points, _) = current_data.shape
-                # (num_labels) = current_labels.shape
+                (num_points, _) = current_data.shape                
+                print("i: {}, num_points: {}, Current x: {}, Current y: {}".format(i, num_points, current_x, current_y))
                 # Point densities range from about 0 to 40000 within a window right now
                 # Choose a random subsample of these
                 if num_points > sample_size:
@@ -67,9 +86,6 @@ def sliding_window(file_location, full_data, window_width: int, sample_num: int,
                     subsample_to_TFrecord(writer, current_data, sample_size, 1, rng, replacement=True)
                 else:
                     pass
-                
-                print("i: {}, num_points: {}, Current x: {}, Current y: {}".format(i, num_points, current_x, current_y))
-
                 
                 i += 1
 
