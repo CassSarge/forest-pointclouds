@@ -28,6 +28,27 @@ def normalise_data(data):
 
     return data
 
+def augment_data(data, randomizer):
+        # Randomly rotate the example about the z axis
+    # Generate random angle between 0 and 2pi
+    angle = randomizer.uniform(0, 2*np.pi)
+
+    # Create 3D rotation matrix
+    rotation_matrix = np.array([[np.cos(angle), -np.sin(angle), 0],
+                                [np.sin(angle), np.cos(angle), 0],
+                                [0, 0, 1]])
+    
+    # Apply rotation matrix to data
+    data[:,0:3] = np.matmul(data[:,0:3], rotation_matrix)
+
+        # Randomly apply a small amount of jitter to the data
+    # Generate random jitter between -0.01 and 0.01
+    jitter = randomizer.uniform(-0.01, 0.01, size=(data.shape[0], 3))
+    # Add jitter to the data
+    data[:,0:3] += jitter
+    
+    return data
+
 def subsample_to_TFrecord(writer, data, current_x, current_y, sample_size, n_subsamples, randomizer, replacement = False):
 
     # Centre the data around the origin
@@ -39,6 +60,8 @@ def subsample_to_TFrecord(writer, data, current_x, current_y, sample_size, n_sub
     for i in range(n_subsamples):
         # Subsample the data
         subsampled_data = randomizer.choice(data, sample_size, replace=replacement)
+        # Augment the data
+        subsampled_data = augment_data(subsampled_data, randomizer)
         # Create a TFRecord example from the data
         current_example = basic_example_from_data(subsampled_data[:, 0:3], subsampled_data[:, 3])
         writer.write(current_example.SerializeToString())
