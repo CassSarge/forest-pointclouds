@@ -5,6 +5,7 @@ from pnet2_layers.layers import Pointnet_SA
 from models.sem_seg_model import SEM_SEG_Model
 import os
 import matplotlib.pyplot as plt
+import pickle
 
 def plot_result(history, item):
     plt.plot(history.history[item], label=item)
@@ -16,26 +17,6 @@ def plot_result(history, item):
     plt.grid()
     plt.show()
 
-def countRecords(ds:tf.data.Dataset):
-  count = 0
-
-  if tf.executing_eagerly():
-    # TF v2 or v1 in eager mode
-    for r in ds:
-      count = count+1
-  else:  
-    # TF v1 in non-eager mode
-    iterator = tf.compat.v1.data.make_one_shot_iterator(ds)
-    next_batch = iterator.get_next()
-    with tf.compat.v1.Session() as sess:
-      try:
-        while True:
-          sess.run(next_batch)
-          count = count+1    
-      except tf.errors.OutOfRangeError:
-        pass
-  
-  return count
 
 def prepare_data(dataset, batch_size):
 
@@ -153,12 +134,9 @@ def train():
     history = model.fit(
         dataset_train,
         validation_data=dataset_val,
-        # validation_steps= train_length // config['batch_size'],
-        # validation_freq=1,
         callbacks=callbacks,
         epochs=50,
         verbose=1,
-        # steps_per_epoch=train_length // config['batch_size']
     )
 
     plot_result(history, "loss")
@@ -168,6 +146,10 @@ def train():
     plot_result(history, "StemIoU")
     plot_result(history, "GroundIoU")
     plot_result(history, "UndergrowthIoU")
+
+    # Save history
+    with open('./logs/{}/trainHistoryDict'.format(config['log_dir']), 'wb') as f:
+       pickle.dump(history.history, f)
 
 if __name__ == '__main__':
 
