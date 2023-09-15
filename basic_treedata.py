@@ -151,7 +151,7 @@ def train(config: dict):
     with open('./logs/{}/trainHistoryDict'.format(config['log_dir']), 'wb') as f:
        pickle.dump(history.history, f)
 
-def setup():
+def setup(window_width: int = 0):
     tf.compat.v1.enable_eager_execution()
     # Set it up such that only 90% of the GPU memory is used, prevents crashing
     tempconfig = tf.compat.v1.ConfigProto()
@@ -163,7 +163,7 @@ def setup():
     config = {
         'train_ds' : 'data/training_data.tfrecord', 
         'val_ds' : 'data/validation_data.tfrecord',
-        'log_dir' : 'trees_new',
+        'log_dir' : 'trees_{}'.format(window_width),
         'log_freq' : 10,
         'test_freq' : 100,
         'batch_size' : 16,
