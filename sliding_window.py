@@ -4,11 +4,26 @@ import tensorflow as tf
 
 from generateTFRecord import load_dataset, basic_example_from_data
 
+def centre_data(subsampled_data):
+    # Centre the data around the origin
+    # Find the mean of the x and y coordinates
+    mean_x = np.mean(subsampled_data[:,0])
+    mean_y = np.mean(subsampled_data[:,1])
+    # Subtract the mean from the x and y coordinates
+    subsampled_data[:,0] -= mean_x
+    subsampled_data[:,1] -= mean_y
+
+    return subsampled_data
+
 def subsample_to_TFrecord(writer, data, sample_size, n_subsamples, randomizer, replacement = False):
 
     # Repeatedly subsample the data and save it to the TFRecord file
     for i in range(n_subsamples):
+        # Subsample the data
         subsampled_data = randomizer.choice(data, sample_size, replace=replacement)
+        # Centre the data around the origin
+        subsampled_data = centre_data(subsampled_data)
+        # Create a TFRecord example from the data
         current_example = basic_example_from_data(subsampled_data[:, 0:3], subsampled_data[:, 3])
         writer.write(current_example.SerializeToString())
 
