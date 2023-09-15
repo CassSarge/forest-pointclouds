@@ -4,14 +4,11 @@ import tensorflow as tf
 
 from generateTFRecord import load_dataset, basic_example_from_data
 
-def centre_data(data):
-    # Centre the data around the origin
-    # Find the mean of the x and y coordinates
-    mean_x = np.mean(data[:,0])
-    mean_y = np.mean(data[:,1])
+def centre_data(data, centre_x, centre_y,):
+
     # Subtract the mean from the x and y coordinates
-    data[:,0] -= mean_x
-    data[:,1] -= mean_y
+    data[:,0] -= centre_x
+    data[:,1] -= centre_y
 
     return data
 
@@ -31,10 +28,10 @@ def normalise_data(data):
 
     return data
 
-def subsample_to_TFrecord(writer, data, sample_size, n_subsamples, randomizer, replacement = False):
+def subsample_to_TFrecord(writer, data, current_x, current_y, sample_size, n_subsamples, randomizer, replacement = False):
 
     # Centre the data around the origin
-    data = centre_data(data)
+    data = centre_data(data, current_x, current_y,)
     # Normalise the data
     data = normalise_data(data)
 
@@ -79,11 +76,11 @@ def sliding_window(file_location, full_data, window_width: int, sample_num: int,
                 # Point densities range from about 0 to 40000 within a window right now
                 # Choose a random subsample of these
                 if num_points > sample_size:
-                    subsample_to_TFrecord(writer, current_data, sample_size, sample_num, rng)
+                    subsample_to_TFrecord(writer, current_data, current_x, current_y, sample_size, sample_num, rng)
                 # Else if there are less than 8192 points, but more than 4096, we'll upsample
                 elif num_points > sample_size / 2:
                     # Only sample once if there is a low number of points, and use replacement
-                    subsample_to_TFrecord(writer, current_data, sample_size, 1, rng, replacement=True)
+                    subsample_to_TFrecord(writer, current_data, current_x, current_y, sample_size, 1, rng, replacement=True)
                 else:
                     pass
                 
