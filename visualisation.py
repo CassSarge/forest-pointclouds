@@ -5,6 +5,9 @@ from pnet2_layers.layers import Pointnet_SA
 from models.sem_seg_model import SEM_SEG_Model
 import os
 from basic_treedata import prepare_data
+import matplotlib.pyplot as plt
+import numpy as np
+import re
 
 def create_model():
     model = SEM_SEG_Model(config['batch_size'], config['num_classes'], config['bn'])
@@ -74,7 +77,7 @@ if __name__ == '__main__':
         'log_dir' : 'trees_{}'.format(1.0),
         'log_freq' : 10,
         'test_freq' : 100,
-        'batch_size' : 16,
+        'batch_size' : 1,
         'num_classes' : 4,
         'lr' : 0.001,
         'bn' : True,
@@ -91,17 +94,73 @@ if __name__ == '__main__':
     # Create model
     model = create_model()
 
-    # Test the model while untrained
-    print("Testing untrained model...")
-    history = model.evaluate(dataset_val, verbose=1)
-    print("Untrained model, accuracy: {:5.2f}%".format(100 * history[1]))
+   #  # Test the model while untrained
+   #  print("Testing untrained model...")
+   #  history = model.evaluate(dataset_val, verbose=1)
+   #  print("Untrained model, accuracy: {:5.2f}%".format(100 * history[1]))
     
     # Load weights
     checkpoint_dir = './logs/{}/model/weights'.format(config['log_dir'])
     model.load_weights(checkpoint_dir).expect_partial()
     
 
-    # Test the model while trained
-    print("Testing trained model...")
-    history = model.evaluate(dataset_val, verbose=1)
-    print("Trained model, accuracy: {:5.2f}%".format(100 * history[1]))
+   #  # Test the model while trained
+   #  print("Testing trained model...")
+   #  history = model.evaluate(dataset_val, verbose=1)
+   #  print("Trained model, accuracy: {:5.2f}%".format(100 * history[1]))
+
+    # Make a prediction
+    batch_size = 1
+    num_examples = 42
+    num_points = 8192
+
+    # Predict
+    # dataset = dataset_val.take(1)
+    for points, labels in dataset_val:
+        probabilities = model.predict(points)
+        break
+
+    predicted_labels = np.argmax(probabilities, axis=-1)
+    
+    predicted_labels = predicted_labels.reshape((num_points))
+    points = points.numpy().reshape((num_points, 3))
+
+    # colour_labels = {
+    #     0: 'Foliage',
+    #     1: 'Stem',
+    #     2: 'Ground',
+    #     3: 'Undergrowth'
+    # }
+
+
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+    # scatter = ax.scatter(points[:, 0], points[:, 1], points[:, 2], c=class_labels, cmap='viridis')
+    
+    # legend1 = ax.legend(*scatter.legend_elements(),
+    #                 loc="lower left", title="Classes")
+
+    # ax.add_artist(legend1)
+
+    # plt.show()
+
+    class_labels = {
+        0: 'Foliage',
+        1: 'Stem',
+        2: 'Ground',
+        3: 'Undergrowth'
+    }
+
+
+    # Plot the point cloud with the predicted labels
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    scatter = ax.scatter(points[:, 0], points[:, 1], points[:, 2], c=predicted_labels, cmap='viridis')
+
+    # Create a custom legend
+    handles, labels = scatter.legend_elements()
+    custom_labels = [class_labels[int(re.findall(r'\d+', label)[0])] for label in labels]
+    legend1 = ax.legend(handles, custom_labels, loc="lower left", title="Classes")
+    ax.add_artist(legend1)
+
+    plt.show()
