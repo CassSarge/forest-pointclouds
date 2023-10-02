@@ -118,6 +118,8 @@ if __name__ == '__main__':
     # dataset = dataset_val.take(1)
     for points, labels in dataset_val:
         probabilities = model.predict(points)
+        history = model.evaluate(points, labels, verbose=1)
+        print("Trained model, accuracy: {:5.2f}%".format(100 * history[1]))
 
         predicted_labels = np.argmax(probabilities, axis=-1)
         
