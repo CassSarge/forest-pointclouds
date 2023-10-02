@@ -125,24 +125,6 @@ if __name__ == '__main__':
     predicted_labels = predicted_labels.reshape((num_points))
     points = points.numpy().reshape((num_points, 3))
 
-    # colour_labels = {
-    #     0: 'Foliage',
-    #     1: 'Stem',
-    #     2: 'Ground',
-    #     3: 'Undergrowth'
-    # }
-
-
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-    # scatter = ax.scatter(points[:, 0], points[:, 1], points[:, 2], c=class_labels, cmap='viridis')
-    
-    # legend1 = ax.legend(*scatter.legend_elements(),
-    #                 loc="lower left", title="Classes")
-
-    # ax.add_artist(legend1)
-
-    # plt.show()
 
     class_labels = {
         0: 'Foliage',
@@ -151,11 +133,18 @@ if __name__ == '__main__':
         3: 'Undergrowth'
     }
 
+    # Convert original labels to integers
+    true_labels = labels.numpy().reshape((num_points))
+    true_labels = (np.rint(true_labels)).astype(int)
 
     # Plot the point cloud with the predicted labels
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    scatter = ax.scatter(points[:, 0], points[:, 1], points[:, 2], c=predicted_labels, cmap='viridis')
+    fig = plt.figure(figsize=plt.figaspect(0.5))
+
+    # First subplot
+
+    ax = fig.add_subplot(1,2,1, projection='3d')
+    scatter = ax.scatter(points[:, 0], points[:, 1], points[:, 2], c=predicted_labels, cmap='inferno')
+    ax.set_title('Predicted labels')
 
     # Create a custom legend
     handles, labels = scatter.legend_elements()
@@ -163,4 +152,15 @@ if __name__ == '__main__':
     legend1 = ax.legend(handles, custom_labels, loc="lower left", title="Classes")
     ax.add_artist(legend1)
 
+    # Second subplot
+
+    ax = fig.add_subplot(1,2,2, projection='3d')
+    scatter = ax.scatter(points[:, 0], points[:, 1], points[:, 2], c=true_labels, cmap='inferno')
+    ax.set_title('True labels')
+
+    # Create a custom legend
+    handles, labels = scatter.legend_elements()
+    custom_labels = [class_labels[int(re.findall(r'\d+', label)[0])] for label in labels]
+    legend1 = ax.legend(handles, custom_labels, loc="lower left", title="Classes")
+    ax.add_artist(legend1)
     plt.show()
