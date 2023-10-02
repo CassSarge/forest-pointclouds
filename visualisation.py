@@ -118,49 +118,54 @@ if __name__ == '__main__':
     # dataset = dataset_val.take(1)
     for points, labels in dataset_val:
         probabilities = model.predict(points)
-        break
 
-    predicted_labels = np.argmax(probabilities, axis=-1)
-    
-    predicted_labels = predicted_labels.reshape((num_points))
-    points = points.numpy().reshape((num_points, 3))
+        predicted_labels = np.argmax(probabilities, axis=-1)
+        
+        predicted_labels = predicted_labels.reshape((num_points))
+        points = points.numpy().reshape((num_points, 3))
 
 
-    class_labels = {
-        0: 'Foliage',
-        1: 'Stem',
-        2: 'Ground',
-        3: 'Undergrowth'
-    }
+        class_labels = {
+            0: 'Foliage',
+            1: 'Stem',
+            2: 'Ground',
+            3: 'Undergrowth'
+        }
 
-    # Convert original labels to integers
-    true_labels = labels.numpy().reshape((num_points))
-    true_labels = (np.rint(true_labels)).astype(int)
+        # Convert original labels to integers
+        true_labels = labels.numpy().reshape((num_points))
+        true_labels = (np.rint(true_labels)).astype(int)
 
-    # Plot the point cloud with the predicted labels
-    fig = plt.figure(figsize=plt.figaspect(0.5))
+        # Plot the point cloud with the predicted labels
+        fig = plt.figure(figsize=plt.figaspect(0.5))
 
-    # First subplot
+        # First subplot
 
-    ax = fig.add_subplot(1,2,1, projection='3d')
-    scatter = ax.scatter(points[:, 0], points[:, 1], points[:, 2], c=predicted_labels, cmap='inferno')
-    ax.set_title('Predicted labels')
+        ax = fig.add_subplot(1,2,1, projection='3d')
+        scatter = ax.scatter(points[:, 0], points[:, 1], points[:, 2], c=predicted_labels, cmap='inferno')
+        ax.set_title('Predicted labels')
 
-    # Create a custom legend
-    handles, labels = scatter.legend_elements()
-    custom_labels = [class_labels[int(re.findall(r'\d+', label)[0])] for label in labels]
-    legend1 = ax.legend(handles, custom_labels, loc="lower left", title="Classes")
-    ax.add_artist(legend1)
+        # Create a custom legend
+        handles, labels = scatter.legend_elements()
+        custom_labels = [class_labels[int(re.findall(r'\d+', label)[0])] for label in labels]
+        legend1 = ax.legend(handles, custom_labels, loc="lower left", title="Classes")
+        ax.add_artist(legend1)
 
-    # Second subplot
+        # Second subplot
 
-    ax = fig.add_subplot(1,2,2, projection='3d')
-    scatter = ax.scatter(points[:, 0], points[:, 1], points[:, 2], c=true_labels, cmap='inferno')
-    ax.set_title('True labels')
+        ax = fig.add_subplot(1,2,2, projection='3d')
+        scatter = ax.scatter(points[:, 0], points[:, 1], points[:, 2], c=true_labels, cmap='inferno')
+        ax.set_title('True labels')
 
-    # Create a custom legend
-    handles, labels = scatter.legend_elements()
-    custom_labels = [class_labels[int(re.findall(r'\d+', label)[0])] for label in labels]
-    legend1 = ax.legend(handles, custom_labels, loc="lower left", title="Classes")
-    ax.add_artist(legend1)
-    plt.show()
+        # Create a custom legend
+        handles, labels = scatter.legend_elements()
+        custom_labels = [class_labels[int(re.findall(r'\d+', label)[0])] for label in labels]
+        legend1 = ax.legend(handles, custom_labels, loc="lower left", title="Classes")
+        ax.add_artist(legend1)
+        plt.show()
+
+        user_input = input("Press enter to continue, or q to quit: ")
+        if user_input == 'q':
+            break
+        else:
+            pass
