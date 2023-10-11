@@ -138,12 +138,15 @@ if __name__ == '__main__':
         true_labels = labels.numpy().reshape((num_points))
         true_labels = (np.rint(true_labels)).astype(int)
 
+        # Stretch out the z axis to be from 0 to 40 instead of -1 to 1
+        points[:, 2] = (points[:, 2] + 1) * 20
+
         # Plot the point cloud with the predicted labels
         fig = plt.figure(figsize=plt.figaspect(0.5))
 
         # First subplot
 
-        ax = fig.add_subplot(1,2,1, projection='3d')
+        ax = fig.add_subplot(1,2,1, projection='3d',box_aspect=(2,2,20))
         scatter = ax.scatter(points[:, 0], points[:, 1], points[:, 2], c=predicted_labels, cmap='inferno')
         ax.set_title('Predicted labels')
 
@@ -155,7 +158,7 @@ if __name__ == '__main__':
 
         # Second subplot
 
-        ax = fig.add_subplot(1,2,2, projection='3d')
+        ax = fig.add_subplot(1,2,2, projection='3d', box_aspect=(2,2,20))
         scatter = ax.scatter(points[:, 0], points[:, 1], points[:, 2], c=true_labels, cmap='inferno')
         ax.set_title('True labels')
 
