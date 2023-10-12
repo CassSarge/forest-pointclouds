@@ -21,6 +21,7 @@ if __name__ == '__main__':
 
     # List all attributes for each history
     attributes = ["loss", "sparse_cat_acc", "meanIoU", "FoliageIoU", "StemIoU", "GroundIoU", "UndergrowthIoU"]
+    IoUattributes = ["meanIoU", "FoliageIoU", "StemIoU", "GroundIoU", "UndergrowthIoU"]
 
     # Create a dictionary to store the final values for each attribute
     final_values = {attribute: [] for attribute in attributes}
@@ -36,12 +37,33 @@ if __name__ == '__main__':
                 print("{}: {}".format(dir, final_value))
         print("\n")
 
-    # Plot the final values for each attribute
-    for attribute in attributes:
+    # Plot the final values for IoU
+    for attribute in IoUattributes:
         plt.plot(nums, final_values[attribute], label=attribute)
     plt.xlabel("Window Width")
-    plt.ylabel("Final Value")
-    plt.title("Final Values of Metrics Across Experiments", fontsize=14)
+    plt.ylabel("IoU")
+    plt.title("Final IoU Values Across Experiments", fontsize=14)
     plt.legend()
     plt.grid()
+    plt.ylim(0, 1)
+    plt.show()
+
+    # Plot the final values for sparse categorical accuracy
+    plt.plot(nums, final_values["sparse_cat_acc"], label="sparse_cat_acc")
+    plt.xlabel("Window Width")
+    plt.ylabel("Accuracy")
+    plt.title("Final Accuracy Values Across Experiments", fontsize=14)
+    plt.legend()
+    plt.grid()
+    plt.ylim(0, 1)
+    plt.show()
+
+    # Plot the final values for loss
+    plt.plot(nums, final_values["loss"], label="loss")
+    plt.xlabel("Window Width")
+    plt.ylabel("Cross-Entropy")
+    plt.title("Final Loss Values Across Experiments", fontsize=14)
+    plt.legend()
+    plt.grid()
+    plt.ylim(0, 1)
     plt.show()
