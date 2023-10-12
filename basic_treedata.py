@@ -1,21 +1,10 @@
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.compat.v1.keras.backend import set_session
-from pnet2_layers.layers import Pointnet_SA
 from models.sem_seg_model import SEM_SEG_Model
 import os
-import matplotlib.pyplot as plt
+from history_graphs import plot_result
 import pickle
-
-def plot_result(history, item):
-    plt.plot(history.history[item], label=item)
-    plt.plot(history.history["val_" + item], label="val_" + item)
-    plt.xlabel("Epochs")
-    plt.ylabel(item)
-    plt.title("Train and Validation {} Over Epochs".format(item), fontsize=14)
-    plt.legend()
-    plt.grid()
-    plt.show()
 
 
 def prepare_data(dataset, batch_size):
