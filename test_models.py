@@ -4,6 +4,7 @@ from visualisation import create_model
 import tensorflow as tf
 # from tensorflow import keras
 from tensorflow.compat.v1.keras.backend import set_session
+import pickle
 
 if __name__ == "__main__":
 
@@ -49,4 +50,13 @@ if __name__ == "__main__":
         test_data = tf.data.TFRecordDataset(test_data_dirs[i])
 
         # Evaluate the model on the test data
-        model.evaluate(test_data)
+        history = model.evaluate(test_data)
+        
+        # Save history
+        with open('./logs/trees_{}/testHistoryDict'.format(checkpoint_names[i]), 'wb') as f:
+            pickle.dump(history.history, f)
+
+        # Print the accuracy and meanIoU
+        print("Model {}, accuracy: {:5.2f}%".format(checkpoint_names[i], 100 * history["sparse_cat_acc"]))                        
+        print("Model {}, meanIoU: {:5.2f}".format(checkpoint_names[i], history["meanIoU"]))
+
