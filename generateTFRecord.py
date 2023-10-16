@@ -6,8 +6,18 @@ def load_dataset(split: bool = True):
     with open("data/plot_annotations.p", "rb") as f:
         annotations = pickle.load(f)
     data = np.asarray(annotations)
-    # Going up to 10 million out of the slightly higher total
-    # because it makes it divisible easily
+    features = data[:, 0:3] # x, y, z
+    labels = data[:, 3] # label
+
+    if split:
+        return features, labels
+    else:
+        return data
+
+def load_test_dataset(split: bool = True):
+    with open("data/plot_annotations_HQPLR118V1.p", "rb") as f:
+        annotations = pickle.load(f)
+    data = np.asarray(annotations)
     features = data[:, 0:3] # x, y, z
     labels = data[:, 3] # label
 
