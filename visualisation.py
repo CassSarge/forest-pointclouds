@@ -56,7 +56,7 @@ def create_model():
                  )]
     )
 
-    model.summary()
+    # model.summary()
 
     return model
 
@@ -70,11 +70,13 @@ if __name__ == '__main__':
     tempconfig.gpu_options.allow_growth = True
     set_session(tf.compat.v1.Session(config=tempconfig))
 
+    window_width = 4.5
+
     # Parameters for the model and training
     config = {
         'train_ds' : 'data/training_data.tfrecord', 
         'val_ds' : 'data/validation_data.tfrecord',
-        'log_dir' : 'trees_{}'.format(1.0),
+        'log_dir' : 'trees_{}'.format(window_width),
         'log_freq' : 10,
         'test_freq' : 100,
         'batch_size' : 1,
@@ -84,11 +86,9 @@ if __name__ == '__main__':
     }
 
     # Prepare data
-    dataset_train= tf.data.TFRecordDataset(config['train_ds'])
     dataset_val= tf.data.TFRecordDataset(config['val_ds'])
 
     # Prepare datasets
-    dataset_train = prepare_data(dataset_train, config['batch_size'])
     dataset_val = prepare_data(dataset_val, config['batch_size'])
 
     # Create model
@@ -114,6 +114,13 @@ if __name__ == '__main__':
     num_examples = 42
     num_points = 8192
 
+    class_labels = {
+        0: 'Foliage',
+        1: 'Stem',
+        2: 'Ground',
+        3: 'Undergrowth'
+    }
+
     # Predict
     # dataset = dataset_val.take(1)
     for points, labels in dataset_val:
@@ -126,14 +133,6 @@ if __name__ == '__main__':
         predicted_labels = predicted_labels.reshape((num_points))
         points = points.numpy().reshape((num_points, 3))
 
-
-        class_labels = {
-            0: 'Foliage',
-            1: 'Stem',
-            2: 'Ground',
-            3: 'Undergrowth'
-        }
-
         # Convert original labels to integers
         true_labels = labels.numpy().reshape((num_points))
         true_labels = (np.rint(true_labels)).astype(int)
@@ -141,12 +140,16 @@ if __name__ == '__main__':
         # Stretch out the z axis to be from 0 to 40 instead of -1 to 1
         points[:, 2] = (points[:, 2] + 1) * 20
 
+        # Stretch out x and y to be from -4.5 to 4.5 instead of -1 to 1
+        points[:, 0] = points[:, 0] * window_width
+        points[:, 1] = points[:, 1] * window_width
+
         # Plot the point cloud with the predicted labels
         fig = plt.figure(figsize=plt.figaspect(0.5))
 
         # First subplot
 
-        ax = fig.add_subplot(1,2,1, projection='3d',box_aspect=(2,2,20))
+        ax = fig.add_subplot(1,2,1, projection='3d',box_aspect=(5,5,20))
         scatter = ax.scatter(points[:, 0], points[:, 1], points[:, 2], c=predicted_labels, cmap='inferno')
         ax.set_title('Predicted labels')
 
@@ -158,7 +161,7 @@ if __name__ == '__main__':
 
         # Second subplot
 
-        ax = fig.add_subplot(1,2,2, projection='3d', box_aspect=(2,2,20))
+        ax = fig.add_subplot(1,2,2, projection='3d', box_aspect=(5,5,20))
         scatter = ax.scatter(points[:, 0], points[:, 1], points[:, 2], c=true_labels, cmap='inferno')
         ax.set_title('True labels')
 
