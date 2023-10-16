@@ -2,7 +2,7 @@ import numpy as np
 import pickle
 import tensorflow as tf
 
-from generateTFRecord import load_dataset, basic_example_from_data
+from generateTFRecord import load_dataset, load_test_dataset, basic_example_from_data
 
 def centre_data(data, centre_x, centre_y,):
 
@@ -157,8 +157,17 @@ def create_records_using_window(window_width):
     print("Packaging validation data...")
     sliding_window(file_location="data/validation_data.tfrecord", full_data=validation_data, window_width=window_width, sample_num=1)
 
+def create_testing_data(window_width):
+    full_data = load_test_dataset(split = False)
+    print("Full data length: {}".format(len(full_data)))
+    print("Window width: {}m".format(window_width))
+    print("Packaging testing data...")
+    file_location = "data/testing_data_{}.tfrecord".format(window_width)
+    sliding_window(file_location=file_location, full_data=full_data, window_width=window_width, sample_num=1)
+
 
 if __name__ == '__main__':
 
-    window_width = 3
-    create_records_using_window(window_width)
+    window_width = 0.5
+    # create_records_using_window(window_width)
+    create_testing_data(window_width)
