@@ -2,20 +2,31 @@ import os
 import pickle
 import numpy as np
 
-import tensorflow as tf
+def shorten_ply_file(filename: str, new_filename: str, n_points: int):
+    # Open a .ply file and randomly remove 80% of points
+    with open(filename, "rb") as f:
+        ply_data = f.readlines()
 
-# Attempting to create a tfrecord file from the plot annotations
-# This might be the wrong way to go about it! because all of the points are grouped together rather than being in mini plots that can be split up idk
-def create_example(features, labels):
+    # save the first 10 lines
+    header = ply_data[:10]
+    print(header)
 
-    
+    # Delete data except for 8192 random points
+    ply_data = ply_data[10:]
+    ply_data = np.asarray(ply_data)
+    length = len(ply_data)
+    print("Length of ply data: {}".format(length))
+    indices = np.arange(length)
+    np.random.shuffle(indices)
+    indices = indices[:n_points]
+    ply_data = ply_data[indices]
 
-	feature = {
-        'scan/points' : tf.train.Feature(float_list=tf.train.FloatList(value=features[:, :3].reshape(-1, 1))),
-        'label/labels' : tf.train.Feature(float_list=tf.train.FloatList(value=[labels]))
-	}
+    print("Length of ply data after shuffling: {}".format(len(ply_data)))
 
-	return tf.train.Example(features=tf.train.Features(feature=feature))
+    # Save the remaining points to a new .ply file
+    with open(new_filename, "wb") as f:
+        f.writelines(header)
+        f.writelines(ply_data)
 
 if __name__ == '__main__':
 
@@ -23,6 +34,7 @@ if __name__ == '__main__':
         annotations = pickle.load(f)
     data = np.asarray(annotations)
     print(data.shape) # (10829404, 4) (x, y, z, label)
+    print(data[1,:])
     print(type(data)) # numpy.ndarray
     print(data[1:200, :]) # (10829404, 4) (x, y, z, label
 
@@ -40,19 +52,3 @@ if __name__ == '__main__':
     print(type(labels))
     print(type(labels[1]))
 
-    # create_example(features, labels)
-
-    # print("Creating TFRecord file...")
-    # with tf.io.TFRecordWriter("plot_annotations.tfrecord") as writer:
-    #     # Make TFRecord file from numpy array
-    #     for i in range(len(features)):
-
-    #         # Create a feature
-    #         feature = {
-    #             'points': tf.train.Feature(float_list=tf.train.FloatList(value=features[i])),
-    #             'labels': tf.train.Feature(int64_list=tf.train.Int64List(value=[labels[i]]))
-    #         }
-    #         # Create an example protocol buffer
-    #         example = tf.train.Example(features=tf.train.Features(feature=feature))
-    #         # Serialize to string and write on the file
-    #         writer.write(example.SerializeToString())
