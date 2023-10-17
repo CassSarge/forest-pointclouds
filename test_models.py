@@ -1,8 +1,6 @@
 import tensorflow as tf
-import os
 from visualisation import create_model
 import tensorflow as tf
-# from tensorflow import keras
 from tensorflow.compat.v1.keras.backend import set_session
 import pickle
 import matplotlib.pyplot as plt
@@ -41,19 +39,15 @@ def plot_test_results(test_data_nums):
     plt.grid()
     plt.show()
 
-def evaluate_models():
+def evaluate_models(test_data_nums):
     # Create the model
     model = create_model(config)
 
-    # Define the directory containing the test data
-    test_data_dir = '/home/cass/thesis/forest-pointclouds/'
-
     # Define log folders where models are stored
-    checkpoint_names = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5]
+    checkpoint_names = [num.replace('_', '.') for num in test_data_nums]
     checkpoint_dirs = ["./logs/trees_{}/model/weights'".format(name) for name in checkpoint_names]
 
     # Define the list of test data files
-    test_data_nums = ['0_5', '1_0', '1_5', '2_0', '2_5', '3_0', '3_5', '4_0', '4_5']
     test_data_dirs = ["./data/test_data/testing_data_{}.tfrecord".format(num) for num in test_data_nums]
 
     # Loop through each model and test data file, and evaluate the model
@@ -99,5 +93,9 @@ if __name__ == "__main__":
         'bn' : True,
     }
 
+
+    test_data_nums = ['0_5', '1_0', '1_5', '2_0', '2_5', '3_0', '3_5', '4_0', '4_5']
+
     # Evaluate the models
-    evaluate_models()
+    evaluate_models(test_data_nums)
+    plot_test_results(test_data_nums)
