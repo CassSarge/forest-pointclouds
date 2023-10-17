@@ -5,26 +5,43 @@ import tensorflow as tf
 # from tensorflow import keras
 from tensorflow.compat.v1.keras.backend import set_session
 import pickle
+import matplotlib.pyplot as plt
 
-if __name__ == "__main__":
+def plot_test_results(test_data_nums):
+    # Define the directory containing the testHistoryDict files
+    test_dirs = ['./logs/test_history/testHistoryDict_{}'.format(num) for num in test_data_nums]
 
-    tf.compat.v1.enable_eager_execution()
-    # Set it up such that only 90% of the GPU memory is used, prevents crashing
-    tempconfig = tf.compat.v1.ConfigProto()
-    tempconfig.gpu_options.per_process_gpu_memory_fraction = 0.9  # 0.6 sometimes works better for folks
-    tempconfig.gpu_options.allow_growth = True
-    set_session(tf.compat.v1.Session(config=tempconfig))
+    # Create a list of window_widths from test_data_nums
+    window_widths = [float(num.replace('_', '.')) for num in test_data_nums]
 
-    # Parameters for the model and training
-    config = {
-        'log_freq' : 10,
-        'test_freq' : 100,
-        'batch_size' : 1,
-        'num_classes' : 4,
-        'lr' : 0.001,
-        'bn' : True,
-    }
+    # Create empty lists
+    accuracies = []
+    meanIoUs = []
 
+    # Load the accuracies for each window width from each testHistoryDict file
+    for i in range(len(test_dirs)):
+        with open(test_dirs[i], 'rb') as f:
+            history = pickle.load(f)
+            accuracies.append(history['sparse_cat_acc'])
+            meanIoUs.append(history['meanIoU'])
+
+    # Plot the accuracy
+    plt.plot(window_widths, accuracies, label='Accuracy')
+    plt.xlabel('Window Width')
+    plt.ylabel('Accuracy')
+    plt.title('Accuracy compared for Window Width on Testing Data', fontsize=14)
+    plt.grid()
+    plt.show()
+
+    # Plot the meanIoU
+    plt.plot(window_widths, meanIoUs, label='meanIoU')
+    plt.xlabel('Window Width')
+    plt.ylabel('meanIoU')
+    plt.title('meanIoU compared for Window Width on Testing Data', fontsize=14)
+    plt.grid()
+    plt.show()
+
+def evaluate_models():
     # Create the model
     model = create_model(config)
 
@@ -53,10 +70,34 @@ if __name__ == "__main__":
         history = model.evaluate(test_data)
         
         # Save history
-        with open('./logs/trees_{}/testHistoryDict'.format(checkpoint_names[i]), 'wb') as f:
+        with open('./logs/test_history/testHistoryDict_{}'.format(test_data_nums[i]), 'wb') as f:
             pickle.dump(history.history, f)
 
         # Print the accuracy and meanIoU
         print("Model {}, accuracy: {:5.2f}%".format(checkpoint_names[i], 100 * history["sparse_cat_acc"]))                        
         print("Model {}, meanIoU: {:5.2f}".format(checkpoint_names[i], history["meanIoU"]))
 
+
+    print("Done evaluating models!")
+
+if __name__ == "__main__":
+
+    tf.compat.v1.enable_eager_execution()
+    # Set it up such that only 90% of the GPU memory is used, prevents crashing
+    tempconfig = tf.compat.v1.ConfigProto()
+    tempconfig.gpu_options.per_process_gpu_memory_fraction = 0.9  # 0.6 sometimes works better for folks
+    tempconfig.gpu_options.allow_growth = True
+    set_session(tf.compat.v1.Session(config=tempconfig))
+
+    # Parameters for the model and training
+    config = {
+        'log_freq' : 10,
+        'test_freq' : 100,
+        'batch_size' : 1,
+        'num_classes' : 4,
+        'lr' : 0.001,
+        'bn' : True,
+    }
+
+    # Evaluate the models
+    evaluate_models()
