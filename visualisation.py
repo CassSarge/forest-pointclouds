@@ -3,11 +3,12 @@ from tensorflow import keras
 from tensorflow.compat.v1.keras.backend import set_session
 from pnet2_layers.layers import Pointnet_SA
 from models.sem_seg_model import SEM_SEG_Model
-import os
 from basic_treedata import prepare_data
 import matplotlib.pyplot as plt
 import numpy as np
 import re
+import export_points_ply
+from datetime import datetime
 
 def create_model():
     model = SEM_SEG_Model(config['batch_size'], config['num_classes'], config['bn'])
@@ -124,6 +125,7 @@ if __name__ == '__main__':
     # Predict
     # dataset = dataset_val.take(1)
     for points, labels in dataset_val:
+        # __________________________________ Perform predictions __________________________________
         probabilities = model.predict(points)
         history = model.evaluate(points, labels, verbose=1)
         print("Trained model, accuracy: {:5.2f}%".format(100 * history[1]))
@@ -143,6 +145,8 @@ if __name__ == '__main__':
         # Stretch out x and y to be from -4.5 to 4.5 instead of -1 to 1
         points[:, 0] = points[:, 0] * window_width
         points[:, 1] = points[:, 1] * window_width
+
+        # __________________________________ Plot point clouds side by side __________________________________
 
         # Plot the point cloud with the predicted labels
         fig = plt.figure(figsize=plt.figaspect(0.5))
@@ -171,7 +175,23 @@ if __name__ == '__main__':
         legend1 = ax.legend(handles, custom_labels, loc="lower left", title="Classes")
         ax.add_artist(legend1)
         plt.show()
+        # __________________________________ Save predicted and current points as two .ply files __________________________________
+        
+        # Choose filenames
+        now = datetime.now()
+        dt_string = now.strftime("{}_%d-%m-%Y_%H-%M-%S".format(window_width))
+        predicted_fname = "data/predictions/{}_predicted.ply".format(dt_string)
+        truth_fname = "data/predictions/{}_truth.ply".format(dt_string)
 
+        # Combine points and labels
+        predicted_points = np.hstack((points, predicted_labels.reshape((num_points, 1))))
+        true_points = np.hstack((points, true_labels.reshape((num_points, 1))))
+
+        # Export to .ply files
+        export_points_ply.export_points(predicted_fname, predicted_points)
+        export_points_ply.export_points(truth_fname, true_points)
+
+        # __________________________________ Check with user to continue __________________________________
         user_input = input("Press enter to continue, or q to quit: ")
         if user_input == 'q':
             break
