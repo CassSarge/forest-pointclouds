@@ -22,15 +22,19 @@ def plot_result(history, item, window_width: None):
     plt.ylim(0, 1)
     plt.show()
 
-
-if __name__ == '__main__':
-    # List all log directories to use
+def gen_graphs(val = False):
     nums = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5]
     dirs = ["trees_{}".format(num) for num in nums]
 
     # List all attributes for each history
-    attributes = ["loss", "sparse_cat_acc", "meanIoU", "FoliageIoU", "StemIoU", "GroundIoU", "UndergrowthIoU"]
-    IoUattributes = ["meanIoU", "FoliageIoU", "StemIoU", "GroundIoU", "UndergrowthIoU"]
+    if val == False:
+        attributes = ["loss", "sparse_cat_acc", "meanIoU", "FoliageIoU", "StemIoU", "GroundIoU", "UndergrowthIoU"]
+        IoUattributes = ["meanIoU", "FoliageIoU", "StemIoU", "GroundIoU", "UndergrowthIoU"]
+        title = "Training "
+    elif val == True:
+        attributes = ["val_loss", "val_sparse_cat_acc", "val_meanIoU", "val_FoliageIoU", "val_StemIoU", "val_GroundIoU", "val_UndergrowthIoU"]
+        IoUattributes = ["val_meanIoU", "val_FoliageIoU", "val_StemIoU", "val_GroundIoU", "val_UndergrowthIoU"]
+        title = "Validation "
 
     # Create a dictionary to store the final values for each attribute
     final_values = {attribute: [] for attribute in attributes}
@@ -51,27 +55,27 @@ if __name__ == '__main__':
         plt.plot(nums, final_values[attribute], label=attribute)
     plt.xlabel("Window Width")
     plt.ylabel("IoU")
-    plt.title("Final IoU Values Across Experiments", fontsize=14)
+    plt.title("Final {}IoU Values Across Experiments".format(title), fontsize=14)
     plt.legend()
     plt.grid()
     plt.ylim(0, 1)
     plt.show()
 
     # Plot the final values for sparse categorical accuracy
-    plt.plot(nums, final_values["sparse_cat_acc"], label="sparse_cat_acc")
+    plt.plot(nums, final_values[attributes[1]], label=attributes[1])
     plt.xlabel("Window Width")
     plt.ylabel("Accuracy")
-    plt.title("Final Accuracy Values Across Experiments", fontsize=14)
+    plt.title("Final {}Accuracy Values Across Experiments".format(title), fontsize=14)
     plt.legend()
     plt.grid()
     plt.ylim(0, 1)
     plt.show()
 
     # Plot the final values for loss
-    plt.plot(nums, final_values["loss"], label="loss")
+    plt.plot(nums, final_values[attributes[0]], label=attributes[0])
     plt.xlabel("Window Width")
     plt.ylabel("Cross-Entropy")
-    plt.title("Final Loss Values Across Experiments", fontsize=14)
+    plt.title("Final {}Loss Values Across Experiments".format(title), fontsize=14)
     plt.legend()
     plt.grid()
     plt.ylim(0, 1)
@@ -93,11 +97,11 @@ if __name__ == '__main__':
     for dir in dirs:
         with open('./logs/{}/trainHistoryDict'.format(dir), 'rb') as f:
             history = pickle.load(f)
-            plt.plot(history["meanIoU"], label=dir)
+            plt.plot(history[attributes[2]], label=dir)
 
     plt.xlabel("Epochs")
     plt.ylabel("IoU")
-    plt.title("Mean IoU Across Epochs", fontsize=14)
+    plt.title("{}Mean IoU Across Epochs".format(title), fontsize=14)
     plt.legend()
     plt.grid()
     plt.ylim(0, 1)
@@ -106,11 +110,11 @@ if __name__ == '__main__':
     for dir in dirs:
         with open('./logs/{}/trainHistoryDict'.format(dir), 'rb') as f:
             history = pickle.load(f)
-            plt.plot(history["loss"], label=dir)
+            plt.plot(history[attributes[0]], label=dir)
 
     plt.xlabel("Epochs")
     plt.ylabel("Cross-Entropy")
-    plt.title("Loss Across Epochs", fontsize=14)
+    plt.title("{}Loss Across Epochs".format(title), fontsize=14)
     plt.legend()
     plt.grid()
     plt.ylim(0, 1)
@@ -119,12 +123,16 @@ if __name__ == '__main__':
     for dir in dirs:
         with open('./logs/{}/trainHistoryDict'.format(dir), 'rb') as f:
             history = pickle.load(f)
-            plt.plot(history["sparse_cat_acc"], label=dir)
+            plt.plot(history[attributes[1]], label=dir)
 
     plt.xlabel("Epochs")
     plt.ylabel("Accuracy")
-    plt.title("Accuracy Across Epochs", fontsize=14)
+    plt.title("{}Accuracy Across Epochs".format(title), fontsize=14)
     plt.legend()
     plt.grid()
     plt.ylim(0, 1)
     plt.show()
+
+if __name__ == '__main__':
+    # List all log directories to use
+   gen_graphs(val = True)
