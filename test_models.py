@@ -10,7 +10,7 @@ import seaborn as sns
 from tensorflow.python.ops.numpy_ops import np_config
 np_config.enable_numpy_behavior()
 
-def plot_confusion_matrix(confmat):
+def plot_confusion_matrix(confmat, title='Confusion matrix'):
 
     con_mat_norm = np.around(confmat.astype('float') / confmat.sum(axis=1)[:, np.newaxis], decimals=2)
     
@@ -25,6 +25,8 @@ def plot_confusion_matrix(confmat):
     names = ['Foliage', 'Stem', 'Ground', 'Undergrowth']
     ax.set_xticklabels(names)
     ax.set_yticklabels(names)
+    # Set title
+    plt.title(title)
     plt.show()
 
 
@@ -124,6 +126,44 @@ def plot_test_results(test_data_nums):
     # plt.ylim(0, 1)
     plt.show()
 
+    # Make an empty dictionary to store the stats with the data nums as the keys
+    stats = {}
+
+    # Plot confusion matrices
+    for i in range(len(test_data_nums)):
+        with open('./logs/test_history/confmat_{}'.format(test_data_nums[i]), 'rb') as f:
+            confmat = pickle.load(f)
+            plot_confusion_matrix(confmat, title='Normalised Confusion Matrix for {}m Window Width'.format(window_widths[i]))
+            # Calculate per class TP, FP, FN, TN
+            foliage_values = calculate_stats(confmat, 0)
+            stem_values = calculate_stats(confmat, 1)
+            ground_values = calculate_stats(confmat, 2)
+            undergrowth_values = calculate_stats(confmat, 3)
+            # Construct dictionary for these values
+            values = {'foliage': foliage_values, 'stem': stem_values, 'ground': ground_values, 'undergrowth': undergrowth_values}
+            # Add to stats dictionary
+            stats[test_data_nums[i]] = values
+            # Print the stats
+            print("Stats for {}m Window Width:".format(window_widths[i]))
+            print("Foliage: {}".format(foliage_values))
+            print("Stem: {}".format(stem_values))
+            print("Ground: {}".format(ground_values))
+            print("Undergrowth: {}".format(undergrowth_values))
+
+    # Save stats dictionary
+    with open('./logs/test_history/stats', 'wb') as f:
+        pickle.dump(stats, f)
+
+def calculate_stats(confmat, class_num):
+    TP = confmat[class_num, class_num]
+    FP = np.sum(confmat[:, class_num]) - TP
+    FN = np.sum(confmat[class_num, :]) - TP
+    TN = np.sum(confmat) - TP - FP - FN
+
+    # Construct a dictionary
+    values = {'TP': TP, 'FP': FP, 'FN': FN, 'TN': TN}
+    return values
+
 def evaluate_models(test_data_nums, config):
     # Create the model
     model = create_model(config)
@@ -190,6 +230,7 @@ def evaluate_models(test_data_nums, config):
 
     print("Done evaluating models!")
 
+
 if __name__ == "__main__":
 
     tf.compat.v1.enable_eager_execution()
@@ -215,5 +256,5 @@ if __name__ == "__main__":
     test_data_nums = test_data_nums[::-1]
 
     # Evaluate the models
-    evaluate_models(test_data_nums, config)
-    # plot_test_results(test_data_nums)
+    # evaluate_models(test_data_nums, config)
+    plot_test_results(test_data_nums)
