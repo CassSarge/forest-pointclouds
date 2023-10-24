@@ -128,17 +128,17 @@ def train(config: dict):
         verbose=1,
     )
 
-    plot_result(history, "loss")
-    plot_result(history, "sparse_cat_acc")
-    plot_result(history, "meanIoU")
-    plot_result(history, "FoliageIoU")
-    plot_result(history, "StemIoU")
-    plot_result(history, "GroundIoU")
-    plot_result(history, "UndergrowthIoU")
-
     # Save history
     with open('./logs/{}/trainHistoryDict'.format(config['log_dir']), 'wb') as f:
        pickle.dump(history.history, f)
+
+    plot_result(history, "loss", window_width=config['log_dir'][-3:])
+    plot_result(history, "sparse_cat_acc", window_width=config['log_dir'][-3:])
+    plot_result(history, "meanIoU", window_width=config['log_dir'][-3:])
+    plot_result(history, "FoliageIoU", window_width=config['log_dir'][-3:])
+    plot_result(history, "StemIoU", window_width=config['log_dir'][-3:])
+    plot_result(history, "GroundIoU", window_width=config['log_dir'][-3:])
+    plot_result(history, "UndergrowthIoU", window_width=config['log_dir'][-3:])
 
 def setup(window_width: int = 0):
     tf.compat.v1.enable_eager_execution()
@@ -165,7 +165,8 @@ def setup(window_width: int = 0):
 
 if __name__ == '__main__':
 
-    config = setup()
+    window_width = 0.5
+    config = setup(window_width)
     train(config)
 
     print("____________________________________________")
