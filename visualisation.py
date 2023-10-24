@@ -7,10 +7,10 @@ from basic_treedata import prepare_data
 import matplotlib.pyplot as plt
 import numpy as np
 import re
-import export_points_ply
+from export_points_ply import export_points_ply
 from datetime import datetime
 
-def create_model():
+def create_model(config):
     model = SEM_SEG_Model(config['batch_size'], config['num_classes'], config['bn'])
     
     model.build((config['batch_size'], 8192, 3))
@@ -71,12 +71,12 @@ if __name__ == '__main__':
     tempconfig.gpu_options.allow_growth = True
     set_session(tf.compat.v1.Session(config=tempconfig))
 
-    window_width = 4.5
+    window_width = 0.5
+    test_suffix = '0_5'
 
     # Parameters for the model and training
     config = {
-        'train_ds' : 'data/training_data.tfrecord', 
-        'val_ds' : 'data/validation_data.tfrecord',
+        'test_ds' : 'data/test_data/testing_data_{}.tfrecord'.format(test_suffix),
         'log_dir' : 'trees_{}'.format(window_width),
         'log_freq' : 10,
         'test_freq' : 100,
@@ -87,27 +87,28 @@ if __name__ == '__main__':
     }
 
     # Prepare data
-    dataset_val= tf.data.TFRecordDataset(config['val_ds'])
+    dataset_train= tf.data.TFRecordDataset(config['test_ds'])
 
     # Prepare datasets
-    dataset_val = prepare_data(dataset_val, config['batch_size'])
+    dataset_train = prepare_data(dataset_train, config['batch_size'])
 
     # Create model
-    model = create_model()
+    model = create_model(config)
 
    #  # Test the model while untrained
    #  print("Testing untrained model...")
-   #  history = model.evaluate(dataset_val, verbose=1)
+   #  history = model.evaluate(dataset_train, verbose=1)
    #  print("Untrained model, accuracy: {:5.2f}%".format(100 * history[1]))
     
     # Load weights
     checkpoint_dir = './logs/{}/model/weights'.format(config['log_dir'])
+    print("Checkpoint Dir {}".format(checkpoint_dir))
     model.load_weights(checkpoint_dir).expect_partial()
     
 
    #  # Test the model while trained
    #  print("Testing trained model...")
-   #  history = model.evaluate(dataset_val, verbose=1)
+   #  history = model.evaluate(dataset_train, verbose=1)
    #  print("Trained model, accuracy: {:5.2f}%".format(100 * history[1]))
 
     # Make a prediction
@@ -123,8 +124,8 @@ if __name__ == '__main__':
     }
 
     # Predict
-    # dataset = dataset_val.take(1)
-    for points, labels in dataset_val:
+    # dataset = dataset_train.take(1)
+    for points, labels in dataset_train:
         # __________________________________ Perform predictions __________________________________
         probabilities = model.predict(points)
         history = model.evaluate(points, labels, verbose=1)
@@ -179,17 +180,17 @@ if __name__ == '__main__':
         
         # Choose filenames
         now = datetime.now()
-        dt_string = now.strftime("{}_%d-%m-%Y_%H-%M-%S".format(window_width))
-        predicted_fname = "data/predictions/{}_predicted.ply".format(dt_string)
-        truth_fname = "data/predictions/{}_truth.ply".format(dt_string)
+        dt_string = now.strftime("{}_%d-%m-%Y_%H-%M-%S".format(test_suffix))
+        predicted_fname = "./data/predictions/{}_predicted.ply".format(dt_string)
+        truth_fname = "./data/predictions/{}_truth.ply".format(dt_string)
 
         # Combine points and labels
         predicted_points = np.hstack((points, predicted_labels.reshape((num_points, 1))))
         true_points = np.hstack((points, true_labels.reshape((num_points, 1))))
 
         # Export to .ply files
-        export_points_ply.export_points(predicted_fname, predicted_points)
-        export_points_ply.export_points(truth_fname, true_points)
+        export_points_ply(predicted_fname, predicted_points)
+        export_points_ply(truth_fname, true_points)
 
         # __________________________________ Check with user to continue __________________________________
         user_input = input("Press enter to continue, or q to quit: ")
