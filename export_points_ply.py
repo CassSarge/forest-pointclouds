@@ -26,3 +26,11 @@ def export_points_ply(filepath, points):
                 (R,G,B) = (0,255,255) # Cyan
         f.write('%.4f %.4f %.4f %d %d %d\n'%(points[i,0],points[i,1],points[i,2],int(R),int(G),int(B)))
     f.close()
+
+if __name__ == '__main__':
+    import pickle
+    import numpy as np
+    with open("data/plot_annotations.p", "rb") as f:
+        data = pickle.load(f)
+        data = np.asarray(data)
+    export_points_ply("data/test_plot_annotations.ply", data)
