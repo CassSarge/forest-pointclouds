@@ -23,7 +23,7 @@ def plot_result(history, item, window_width: None):
     plt.show()
 
 def gen_graphs(val = False):
-    nums = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5]
+    nums = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5]
     dirs = ["trees_{}".format(num) for num in nums]
 
     # List all attributes for each history
@@ -36,8 +36,15 @@ def gen_graphs(val = False):
         IoUattributes = ["val_meanIoU", "val_FoliageIoU", "val_StemIoU", "val_GroundIoU", "val_UndergrowthIoU"]
         title = "Validation "
 
+    # title = "Training and Validation "
+
+    val_attributes = ["val_loss", "val_sparse_cat_acc", "val_meanIoU", "val_FoliageIoU", "val_StemIoU", "val_GroundIoU", "val_UndergrowthIoU"]
+    val_IoUattributes = ["val_meanIoU", "val_FoliageIoU", "val_StemIoU", "val_GroundIoU", "val_UndergrowthIoU"]
+
+
     # Create a dictionary to store the final values for each attribute
     final_values = {attribute: [] for attribute in attributes}
+    final_val_values = {attribute: [] for attribute in val_attributes}
 
     # List final values of each attribute across all logs
     for attribute in attributes:
@@ -46,13 +53,18 @@ def gen_graphs(val = False):
             with open('./logs/{}/trainHistoryDict'.format(dir), 'rb') as f:
                 history = pickle.load(f)
                 final_value = history[attribute][-1]
+                final_val_value = history[val_attributes[attributes.index(attribute)]][-1]
                 final_values[attribute].append(final_value)
+                final_val_values[val_attributes[attributes.index(attribute)]].append(final_val_value)
                 print("{}: {}".format(dir, final_value))
         print("\n")
 
     # Plot the final values for IoU
+    colours = ['b', 'g', 'r', 'c', 'm']
     for attribute in IoUattributes:
-        plt.plot(nums, final_values[attribute], label=attribute)
+        colour = colours[IoUattributes.index(attribute)]
+        plt.plot(nums, final_values[attribute], label=attribute, color=colour)
+        # plt.plot(nums, final_val_values[val_IoUattributes[IoUattributes.index(attribute)]], label=val_IoUattributes[IoUattributes.index(attribute)], linestyle='dashed', color=colour)
     plt.xlabel("Window Width")
     plt.ylabel("IoU")
     plt.title("Final {}IoU Values Across Experiments".format(title), fontsize=14)
@@ -63,6 +75,7 @@ def gen_graphs(val = False):
 
     # Plot the final values for sparse categorical accuracy
     plt.plot(nums, final_values[attributes[1]], label=attributes[1])
+    # plt.plot(nums, final_val_values[val_attributes[1]], label=val_attributes[1], linestyle='dashed')
     plt.xlabel("Window Width")
     plt.ylabel("Accuracy")
     plt.title("Final {}Accuracy Values Across Experiments".format(title), fontsize=14)
@@ -73,6 +86,7 @@ def gen_graphs(val = False):
 
     # Plot the final values for loss
     plt.plot(nums, final_values[attributes[0]], label=attributes[0])
+    # plt.plot(nums, final_val_values[val_attributes[0]], label=val_attributes[0], linestyle='dashed')
     plt.xlabel("Window Width")
     plt.ylabel("Cross-Entropy")
     plt.title("Final {}Loss Values Across Experiments".format(title), fontsize=14)
