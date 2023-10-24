@@ -153,10 +153,10 @@ def plot_test_results(test_data_nums):
             con_mat_norm = np.around(confmat.astype('float') / confmat.sum(axis=1)[:, np.newaxis], decimals=2)
             plot_confusion_matrix(confmat, title='Confusion Matrix for {}m Window Width'.format(window_widths[i]))
             # Calculate per class TP, FP, FN, TN
-            foliage_values = calculate_stats(confmat, 0)
-            stem_values = calculate_stats(confmat, 1)
-            ground_values = calculate_stats(confmat, 2)
-            undergrowth_values = calculate_stats(confmat, 3)
+            foliage_values = calculate_stats(confmat, con_mat_norm, 0)
+            stem_values = calculate_stats(confmat, con_mat_norm, 1)
+            ground_values = calculate_stats(confmat, con_mat_norm, 2)
+            undergrowth_values = calculate_stats(confmat, con_mat_norm, 3)
             # Construct dictionary for these values
             values = {'foliage': foliage_values, 'stem': stem_values, 'ground': ground_values, 'undergrowth': undergrowth_values}
             # Add to stats dictionary
@@ -172,14 +172,19 @@ def plot_test_results(test_data_nums):
     with open('./logs/test_history/stats', 'wb') as f:
         pickle.dump(stats, f)
 
-def calculate_stats(confmat, class_num):
+def calculate_stats(confmat, confmat_norm, class_num):
     TP = confmat[class_num, class_num]
     FP = np.sum(confmat[:, class_num]) - TP
     FN = np.sum(confmat[class_num, :]) - TP
     TN = np.sum(confmat) - TP - FP - FN
 
+    TP_N = confmat_norm[class_num, class_num]
+    FP_N = np.sum(confmat_norm[:, class_num]) - TP_N
+    FN_N = np.sum(confmat_norm[class_num, :]) - TP_N
+    TN_N = np.sum(confmat_norm) - TP_N - FP_N - FN_N
+
     # Construct a dictionary
-    values = {'TP': TP, 'FP': FP, 'FN': FN, 'TN': TN}
+    values = {'TP': TP, 'FP': FP, 'FN': FN, 'TN': TN, 'TP_N': TP_N, 'FP_N': FP_N, 'FN_N': FN_N, 'TN_N': TN_N}
     return values
 
 def evaluate_models(test_data_nums, config):
