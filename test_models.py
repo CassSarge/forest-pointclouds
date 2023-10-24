@@ -11,14 +11,15 @@ from tensorflow.python.ops.numpy_ops import np_config
 np_config.enable_numpy_behavior()
 
 def plot_confusion_matrix(confmat, title='Confusion matrix'):
-
-    con_mat_norm = np.around(confmat.astype('float') / confmat.sum(axis=1)[:, np.newaxis], decimals=2)
     
-    con_mat_df = pd.DataFrame(con_mat_norm)
+    con_mat_norm = np.around(confmat.astype('float') / confmat.sum(axis=1)[:, np.newaxis], decimals=2)
+    con_mat_norm_df = pd.DataFrame(con_mat_norm)
+    con_mat_df = pd.DataFrame(confmat)
 
-    figure = plt.figure(figsize=(8, 8))
-    ax = figure.add_subplot(111)
-    sns.heatmap(con_mat_df, annot=True,cmap=plt.cm.Blues)
+    figure = plt.figure(figsize=(16, 8))
+
+    ax = figure.add_subplot(122)
+    sns.heatmap(con_mat_norm_df, annot=True,cmap=plt.cm.Blues)
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
@@ -26,7 +27,23 @@ def plot_confusion_matrix(confmat, title='Confusion matrix'):
     ax.set_xticklabels(names)
     ax.set_yticklabels(names)
     # Set title
+    plt.title('Normalised ' + title)
+
+
+    ax = figure.add_subplot(121)
+
+    sns.heatmap(con_mat_df, annot=True,cmap=plt.cm.Blues)
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    names = ['Foliage', 'Stem', 'Ground', 'Undergrowth']
+    ax.set_xticklabels(names)
+    ax.set_yticklabels(names)
+
+    # Same title with 'Normalised ' before it
     plt.title(title)
+
+
     plt.show()
 
 
@@ -133,7 +150,8 @@ def plot_test_results(test_data_nums):
     for i in range(len(test_data_nums)):
         with open('./logs/test_history/confmat_{}'.format(test_data_nums[i]), 'rb') as f:
             confmat = pickle.load(f)
-            plot_confusion_matrix(confmat, title='Normalised Confusion Matrix for {}m Window Width'.format(window_widths[i]))
+            con_mat_norm = np.around(confmat.astype('float') / confmat.sum(axis=1)[:, np.newaxis], decimals=2)
+            plot_confusion_matrix(confmat, title='Confusion Matrix for {}m Window Width'.format(window_widths[i]))
             # Calculate per class TP, FP, FN, TN
             foliage_values = calculate_stats(confmat, 0)
             stem_values = calculate_stats(confmat, 1)
