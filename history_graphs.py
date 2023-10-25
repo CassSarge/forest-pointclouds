@@ -1,5 +1,42 @@
 import matplotlib.pyplot as plt
 import pickle
+import numpy as np
+import seaborn as sns
+import pandas as pd
+
+def plot_confusion_matrix(confmat, title='Confusion matrix'):
+	
+	con_mat_norm = np.around(confmat.astype('float') / confmat.sum(axis=1)[:, np.newaxis], decimals=2)
+	con_mat_norm_df = pd.DataFrame(con_mat_norm)
+	con_mat_df = pd.DataFrame(confmat)
+
+	figure = plt.figure(figsize=(16, 8))
+
+	ax = figure.add_subplot(122)
+	sns.heatmap(con_mat_norm_df, annot=True,cmap=plt.cm.Blues)
+	plt.tight_layout()
+	plt.ylabel('True label')
+	plt.xlabel('Predicted label')
+	names = ['Foliage', 'Stem', 'Ground', 'Undergrowth']
+	ax.set_xticklabels(names)
+	ax.set_yticklabels(names)
+	# Set title
+	plt.title('Normalised ' + title)
+
+	ax = figure.add_subplot(121)
+
+	sns.heatmap(con_mat_df, annot=True,cmap=plt.cm.Blues)
+	plt.tight_layout()
+	plt.ylabel('True label')
+	plt.xlabel('Predicted label')
+	names = ['Foliage', 'Stem', 'Ground', 'Undergrowth']
+	ax.set_xticklabels(names)
+	ax.set_yticklabels(names)
+
+	# Same title with 'Normalised ' before it
+	plt.title(title)
+
+	plt.show()
 
 def plot_result(history, item, window_width: None):
 	try: history = history.history
@@ -22,7 +59,7 @@ def plot_result(history, item, window_width: None):
 	plt.ylim(0, 1)
 	plt.show()
 
-def gen_graphs(val = False):
+def gen_training_graphs(val = False):
 	nums = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5]
 	dirs = ["trees_{}".format(num) for num in nums]
 
@@ -48,7 +85,7 @@ def gen_graphs(val = False):
 
 	# List final values of each attribute across all logs
 	for attribute in attributes:
-		print("{}: ".format(attribute))
+		# print("{}: ".format(attribute))
 		for dir in dirs:
 			with open('./logs/{}/trainHistoryDict'.format(dir), 'rb') as f:
 				history = pickle.load(f)
@@ -56,8 +93,8 @@ def gen_graphs(val = False):
 				final_val_value = history[val_attributes[attributes.index(attribute)]][-1]
 				final_values[attribute].append(final_value)
 				final_val_values[val_attributes[attributes.index(attribute)]].append(final_val_value)
-				print("{}: {}".format(dir, final_value))
-		print("\n")
+				# print("{}: {}".format(dir, final_value))
+		# print("\n")
 
 	# Plot the final values for IoU
 	colours = ['b', 'g', 'r', 'c', 'm']
@@ -94,18 +131,6 @@ def gen_graphs(val = False):
 	plt.grid()
 	plt.ylim(0, 1)
 	plt.show()
-
-	# # Generate plots for each log showing how each attribute changed over the 50 epochs, including window width
-	# for dir in dirs:
-	#     with open('./logs/{}/trainHistoryDict'.format(dir), 'rb') as f:
-	#         history = pickle.load(f)
-	#         # plot_result(history, "loss", window_width=dir[-3:])
-	#         # plot_result(history, "sparse_cat_acc", window_width=dir[-3:])
-	#         plot_result(history, "meanIoU", window_width=dir[-3:])
-	#         # plot_result(history, "FoliageIoU", window_width=dir[-3:])
-	#         # plot_result(history, "StemIoU", window_width=dir[-3:])
-	#         # plot_result(history, "GroundIoU", window_width=dir[-3:])
-	#         # plot_result(history, "UndergrowthIoU", window_width=dir[-3:])
 
 	# Plot all the meanIoUs together on one graph across all epochs without validation data
 	for dir in dirs:
@@ -147,7 +172,117 @@ def gen_graphs(val = False):
 	plt.ylim(0, 1)
 	plt.show()
 
-def graph_from_confmats():
+def gen_testing_graphs_and_confmats(test_data_nums):
+	# Define the order the results appear in
+	metric_list = ['loss', 'sparse_cat_acc', 'meanIoU', 'FoliageIoU', 'StemIoU', 'GroundIoU', 'UndergrowthIoU']
+
+	# Define the directory containing the testHistoryDict files
+	test_dirs = ['./logs/test_history/testHistory_{}'.format(num) for num in test_data_nums]
+
+	# Create a list of window_widths from test_data_nums
+	window_widths = [float(num.replace('_', '.')) for num in test_data_nums]
+
+	# Create empty lists
+	accuracies = []
+	meanIoUs = []
+	losses = []
+	FoliageIous = []
+	StemIoUs = []
+	GroundIoUs = []
+	UndergrowthIoUs = []
+
+	# Load the accuracies for each window width from each testHistoryDict file
+	for i in range(len(test_dirs)):
+		with open(test_dirs[i], 'rb') as f:
+			history = pickle.load(f)
+
+			# Append the accuracy and meanIoU to the lists based on their position in metric_list
+			accuracies.append(history[metric_list.index('sparse_cat_acc')])
+			meanIoUs.append(history[metric_list.index('meanIoU')])
+			losses.append(history[metric_list.index('loss')])
+			FoliageIous.append(history[metric_list.index('FoliageIoU')])
+			StemIoUs.append(history[metric_list.index('StemIoU')])
+			GroundIoUs.append(history[metric_list.index('GroundIoU')])
+			UndergrowthIoUs.append(history[metric_list.index('UndergrowthIoU')])
+
+
+	# Plot the accuracy
+	plt.plot(window_widths, accuracies, label='Accuracy')
+	plt.xlabel('Window Width')
+	plt.ylabel('Accuracy')
+	plt.title('Accuracy compared for Window Width on Testing Data', fontsize=14)
+	plt.grid()
+	plt.ylim(0.8, 1)
+	plt.show()
+
+	# Plot the IoUs
+	plt.plot(window_widths, meanIoUs, label='meanIoU', color='b')
+	plt.plot(window_widths, FoliageIous, label='FoliageIoU', color='g')
+	plt.plot(window_widths, StemIoUs, label='StemIoU', color='r')
+	plt.plot(window_widths, GroundIoUs, label='GroundIoU', color='c')
+	plt.plot(window_widths, UndergrowthIoUs, label='UndergrowthIoU', color='m')
+	plt.xlabel('Window Width')
+	plt.ylabel('IoU')
+	plt.title('IoU compared for Window Width on Testing Data', fontsize=14)
+	plt.legend()
+	plt.grid()
+	plt.ylim(0.0, 1)
+	plt.show()
+
+	# Plot the loss
+	plt.plot(window_widths, losses, label='Loss')
+	plt.xlabel('Window Width')
+	plt.ylabel('Loss')
+	plt.title('Loss compared for Window Width on Testing Data', fontsize=14)
+	plt.grid()
+	# plt.ylim(0, 1)
+	plt.show()
+
+	# Make an empty dictionary to store the stats with the data nums as the keys
+	stats = {}
+
+	# Plot confusion matrices
+	for i in range(len(test_data_nums)):
+		with open('./logs/test_history/confmat_{}'.format(test_data_nums[i]), 'rb') as f:
+			confmat = pickle.load(f)
+			con_mat_norm = np.around(confmat.astype('float') / confmat.sum(axis=1)[:, np.newaxis], decimals=2)
+			plot_confusion_matrix(confmat, title='Confusion Matrix for {}m Window Width'.format(window_widths[i]))
+			# Calculate per class TP, FP, FN, TN
+			foliage_values = calculate_stats(confmat, con_mat_norm, 0)
+			stem_values = calculate_stats(confmat, con_mat_norm, 1)
+			ground_values = calculate_stats(confmat, con_mat_norm, 2)
+			undergrowth_values = calculate_stats(confmat, con_mat_norm, 3)
+			# Construct dictionary for these values
+			values = {'foliage': foliage_values, 'stem': stem_values, 'ground': ground_values, 'undergrowth': undergrowth_values}
+			# Add to stats dictionary
+			stats[test_data_nums[i]] = values
+			# Print the stats
+			# print("Stats for {}m Window Width:".format(window_widths[i]))
+			# print("Foliage: {}".format(foliage_values))
+			# print("Stem: {}".format(stem_values))
+			# print("Ground: {}".format(ground_values))
+			# print("Undergrowth: {}".format(undergrowth_values))
+
+	# Save stats dictionary
+	# with open('./logs/test_history/stats', 'wb') as f:
+	#     pickle.dump(stats, f)
+
+def calculate_stats(confmat, confmat_norm, class_num):
+	TP = confmat[class_num, class_num]
+	FP = np.sum(confmat[:, class_num]) - TP
+	FN = np.sum(confmat[class_num, :]) - TP
+	TN = np.sum(confmat) - TP - FP - FN
+
+	TP_N = confmat_norm[class_num, class_num]
+	FP_N = np.sum(confmat_norm[:, class_num]) - TP_N
+	FN_N = np.sum(confmat_norm[class_num, :]) - TP_N
+	TN_N = np.sum(confmat_norm) - TP_N - FP_N - FN_N
+
+	# Construct a dictionary
+	values = {'TP': TP, 'FP': FP, 'FN': FN, 'TN': TN, 'TP_N': TP_N, 'FP_N': FP_N, 'FN_N': FN_N, 'TN_N': TN_N}
+	return values
+
+def gen_confmat_derived_graphs():
 	# Using the saved confusion matrix stats for both normalised and not, calculate and plot per class IoU and overall
 	# as well as accuracy
 
@@ -181,20 +316,19 @@ def graph_from_confmats():
 			stats[num][class_name]['NormalisedIoU'] = stats[num][class_name]['TP_N'] / (stats[num][class_name]['TP_N'] + stats[num][class_name]['FN_N'] + stats[num][class_name]['FP_N'])
 		IoU = [stats[num]['foliage']['IoU'], stats[num]['stem']['IoU'], stats[num]['ground']['IoU'], stats[num]['undergrowth']['IoU']]
 		normalised_IoU = [stats[num]['foliage']['NormalisedIoU'], stats[num]['stem']['NormalisedIoU'], stats[num]['ground']['NormalisedIoU'], stats[num]['undergrowth']['NormalisedIoU']]
-		print("IoU for window width {}: {}".format(num, IoU))
+		# print("IoU for window width {}: {}".format(num, IoU))
 
 		# Calculate accuracy
 		stats[num]['Accuracy'] = (stats[num]['foliage']['TP'] + stats[num]['stem']['TP'] + stats[num]['ground']['TP'] + stats[num]['undergrowth']['TP']) / (stats[num]['foliage']['TP'] + stats[num]['stem']['TP'] + stats[num]['ground']['TP'] + stats[num]['undergrowth']['TP'] + stats[num]['foliage']['FN'] + stats[num]['stem']['FN'] + stats[num]['ground']['FN'] + stats[num]['undergrowth']['FN'])
 		# Normalised accuracy
 		stats[num]['NormalisedAccuracy'] = (stats[num]['foliage']['TP_N'] + stats[num]['stem']['TP_N'] + stats[num]['ground']['TP_N'] + stats[num]['undergrowth']['TP_N']) / (stats[num]['foliage']['TP_N'] + stats[num]['stem']['TP_N'] + stats[num]['ground']['TP_N'] + stats[num]['undergrowth']['TP_N'] + stats[num]['foliage']['FN_N'] + stats[num]['stem']['FN_N'] + stats[num]['ground']['FN_N'] + stats[num]['undergrowth']['FN_N'])	
-		print("Accuracy for window width {}: {}".format(num, stats[num]['Accuracy']))
-
+		# print("Accuracy for window width {}: {}".format(num, stats[num]['Accuracy']))
 
 		# Calculate mean IoU
 		stats[num]["MeanIoU"] = sum(IoU) / len(IoU)
 		stats[num]["NormalisedMeanIoU"] = sum(normalised_IoU) / len(normalised_IoU)
 		
-		print("Mean IoU for window width {}: {}".format(num, stats[num]["MeanIoU"]))
+		# print("Mean IoU for window width {}: {}".format(num, stats[num]["MeanIoU"]))
 
 		# Store IoUs and accuracy
 
@@ -220,7 +354,7 @@ def graph_from_confmats():
 		# plt.ylim(0, 1)
 		# plt.show()
 
-	print("Done calculating IoUs and accuracies")
+	# print("Done calculating IoUs and accuracies")
 	# Plot IoUs all together
 	plt.plot(window_widths, mean_ious, label='Mean', color='b')
 	plt.plot(window_widths, foliage_ious, label='Foliage', color='g')
@@ -251,5 +385,8 @@ def graph_from_confmats():
 
 if __name__ == '__main__':
 	# List all log directories to use
-#    gen_graphs(val = True)
-	graph_from_confmats()
+	# gen_training_graphs(val = False)
+	test_data_nums = ['0_5', '1_0', '1_5', '2_0', '2_5', '3_0', '3_5', '4_0', '4_5']
+
+	# gen_testing_graphs_and_confmats(test_data_nums)
+	gen_confmat_derived_graphs()

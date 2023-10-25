@@ -3,49 +3,9 @@ from visualisation import create_model
 import tensorflow as tf
 from tensorflow.compat.v1.keras.backend import set_session
 import pickle
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import seaborn as sns
 from tensorflow.python.ops.numpy_ops import np_config
 np_config.enable_numpy_behavior()
-
-def plot_confusion_matrix(confmat, title='Confusion matrix'):
-    
-    con_mat_norm = np.around(confmat.astype('float') / confmat.sum(axis=1)[:, np.newaxis], decimals=2)
-    con_mat_norm_df = pd.DataFrame(con_mat_norm)
-    con_mat_df = pd.DataFrame(confmat)
-
-    figure = plt.figure(figsize=(16, 8))
-
-    ax = figure.add_subplot(122)
-    sns.heatmap(con_mat_norm_df, annot=True,cmap=plt.cm.Blues)
-    plt.tight_layout()
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
-    names = ['Foliage', 'Stem', 'Ground', 'Undergrowth']
-    ax.set_xticklabels(names)
-    ax.set_yticklabels(names)
-    # Set title
-    plt.title('Normalised ' + title)
-
-
-    ax = figure.add_subplot(121)
-
-    sns.heatmap(con_mat_df, annot=True,cmap=plt.cm.Blues)
-    plt.tight_layout()
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
-    names = ['Foliage', 'Stem', 'Ground', 'Undergrowth']
-    ax.set_xticklabels(names)
-    ax.set_yticklabels(names)
-
-    # Same title with 'Normalised ' before it
-    plt.title(title)
-
-
-    plt.show()
-
 
 
 def prepare_data(dataset, batch_size):
@@ -76,116 +36,6 @@ def prepare_data(dataset, batch_size):
     dataset = dataset.batch(batch_size, drop_remainder=True)
 
     return dataset
-
-def plot_test_results(test_data_nums):
-    # Define the order the results appear in
-    metric_list = ['loss', 'sparse_cat_acc', 'meanIoU', 'FoliageIoU', 'StemIoU', 'GroundIoU', 'UndergrowthIoU']
-
-    # Define the directory containing the testHistoryDict files
-    test_dirs = ['./logs/test_history/testHistory_{}'.format(num) for num in test_data_nums]
-
-    # Create a list of window_widths from test_data_nums
-    window_widths = [float(num.replace('_', '.')) for num in test_data_nums]
-
-    # Create empty lists
-    accuracies = []
-    meanIoUs = []
-    losses = []
-    FoliageIous = []
-    StemIoUs = []
-    GroundIoUs = []
-    UndergrowthIoUs = []
-
-    # Load the accuracies for each window width from each testHistoryDict file
-    for i in range(len(test_dirs)):
-        with open(test_dirs[i], 'rb') as f:
-            history = pickle.load(f)
-
-            # Append the accuracy and meanIoU to the lists based on their position in metric_list
-            accuracies.append(history[metric_list.index('sparse_cat_acc')])
-            meanIoUs.append(history[metric_list.index('meanIoU')])
-            losses.append(history[metric_list.index('loss')])
-            FoliageIous.append(history[metric_list.index('FoliageIoU')])
-            StemIoUs.append(history[metric_list.index('StemIoU')])
-            GroundIoUs.append(history[metric_list.index('GroundIoU')])
-            UndergrowthIoUs.append(history[metric_list.index('UndergrowthIoU')])
-
-
-    # Plot the accuracy
-    plt.plot(window_widths, accuracies, label='Accuracy')
-    plt.xlabel('Window Width')
-    plt.ylabel('Accuracy')
-    plt.title('Accuracy compared for Window Width on Testing Data', fontsize=14)
-    plt.grid()
-    plt.ylim(0.8, 1)
-    plt.show()
-
-    # Plot the IoUs
-    plt.plot(window_widths, meanIoUs, label='meanIoU', color='b')
-    plt.plot(window_widths, FoliageIous, label='FoliageIoU', color='g')
-    plt.plot(window_widths, StemIoUs, label='StemIoU', color='r')
-    plt.plot(window_widths, GroundIoUs, label='GroundIoU', color='c')
-    plt.plot(window_widths, UndergrowthIoUs, label='UndergrowthIoU', color='m')
-    plt.xlabel('Window Width')
-    plt.ylabel('IoU')
-    plt.title('IoU compared for Window Width on Testing Data', fontsize=14)
-    plt.legend()
-    plt.grid()
-    plt.ylim(0.0, 1)
-    plt.show()
-
-    # Plot the loss
-    plt.plot(window_widths, losses, label='Loss')
-    plt.xlabel('Window Width')
-    plt.ylabel('Loss')
-    plt.title('Loss compared for Window Width on Testing Data', fontsize=14)
-    plt.grid()
-    # plt.ylim(0, 1)
-    plt.show()
-
-    # Make an empty dictionary to store the stats with the data nums as the keys
-    stats = {}
-
-    # Plot confusion matrices
-    for i in range(len(test_data_nums)):
-        with open('./logs/test_history/confmat_{}'.format(test_data_nums[i]), 'rb') as f:
-            confmat = pickle.load(f)
-            con_mat_norm = np.around(confmat.astype('float') / confmat.sum(axis=1)[:, np.newaxis], decimals=2)
-            plot_confusion_matrix(confmat, title='Confusion Matrix for {}m Window Width'.format(window_widths[i]))
-            # Calculate per class TP, FP, FN, TN
-            foliage_values = calculate_stats(confmat, con_mat_norm, 0)
-            stem_values = calculate_stats(confmat, con_mat_norm, 1)
-            ground_values = calculate_stats(confmat, con_mat_norm, 2)
-            undergrowth_values = calculate_stats(confmat, con_mat_norm, 3)
-            # Construct dictionary for these values
-            values = {'foliage': foliage_values, 'stem': stem_values, 'ground': ground_values, 'undergrowth': undergrowth_values}
-            # Add to stats dictionary
-            stats[test_data_nums[i]] = values
-            # Print the stats
-            print("Stats for {}m Window Width:".format(window_widths[i]))
-            print("Foliage: {}".format(foliage_values))
-            print("Stem: {}".format(stem_values))
-            print("Ground: {}".format(ground_values))
-            print("Undergrowth: {}".format(undergrowth_values))
-
-    # Save stats dictionary
-    with open('./logs/test_history/stats', 'wb') as f:
-        pickle.dump(stats, f)
-
-def calculate_stats(confmat, confmat_norm, class_num):
-    TP = confmat[class_num, class_num]
-    FP = np.sum(confmat[:, class_num]) - TP
-    FN = np.sum(confmat[class_num, :]) - TP
-    TN = np.sum(confmat) - TP - FP - FN
-
-    TP_N = confmat_norm[class_num, class_num]
-    FP_N = np.sum(confmat_norm[:, class_num]) - TP_N
-    FN_N = np.sum(confmat_norm[class_num, :]) - TP_N
-    TN_N = np.sum(confmat_norm) - TP_N - FP_N - FN_N
-
-    # Construct a dictionary
-    values = {'TP': TP, 'FP': FP, 'FN': FN, 'TN': TN, 'TP_N': TP_N, 'FP_N': FP_N, 'FN_N': FN_N, 'TN_N': TN_N}
-    return values
 
 def evaluate_models(test_data_nums, config):
     # Create the model
