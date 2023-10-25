@@ -136,20 +136,20 @@ def gen_training_graphs(val = False):
 	for dir in dirs:
 		with open('./logs/{}/trainHistoryDict'.format(dir), 'rb') as f:
 			history = pickle.load(f)
-			plt.plot(history[attributes[2]], label=dir)
+			plt.plot(history[attributes[2]], label=nums[dirs.index(dir)])
 
 	plt.xlabel("Epochs")
 	plt.ylabel("IoU")
 	plt.title("{}Mean IoU Across Epochs".format(title), fontsize=14)
 	plt.legend()
 	plt.grid()
-	plt.ylim(0, 1)
+	plt.ylim(0.5, 1)
 	plt.show()
 
 	for dir in dirs:
 		with open('./logs/{}/trainHistoryDict'.format(dir), 'rb') as f:
 			history = pickle.load(f)
-			plt.plot(history[attributes[0]], label=dir)
+			plt.plot(history[attributes[0]], label=nums[dirs.index(dir)])
 
 	plt.xlabel("Epochs")
 	plt.ylabel("Cross-Entropy")
@@ -162,7 +162,7 @@ def gen_training_graphs(val = False):
 	for dir in dirs:
 		with open('./logs/{}/trainHistoryDict'.format(dir), 'rb') as f:
 			history = pickle.load(f)
-			plt.plot(history[attributes[1]], label=dir)
+			plt.plot(history[attributes[1]], label=nums[dirs.index(dir)])
 
 	plt.xlabel("Epochs")
 	plt.ylabel("Accuracy")
@@ -385,8 +385,8 @@ def gen_confmat_derived_graphs():
 
 if __name__ == '__main__':
 	# List all log directories to use
-	# gen_training_graphs(val = False)
+	gen_training_graphs(val = False)
 	test_data_nums = ['0_5', '1_0', '1_5', '2_0', '2_5', '3_0', '3_5', '4_0', '4_5']
 
 	# gen_testing_graphs_and_confmats(test_data_nums)
-	gen_confmat_derived_graphs()
+	# gen_confmat_derived_graphs()
