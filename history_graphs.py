@@ -127,8 +127,8 @@ def gen_training_graphs(val = False):
 	plt.show()
 
 	# Plot the final values for sparse categorical accuracy
-	plt.plot(nums, final_values[attributes[1]], label=attributeLabels[1], color='blueviolet')
-	plt.plot(nums, final_val_values[val_attributes[1]], label=val_attributeLabels[1], linestyle='dashed', color='blueviolet')
+	plt.plot(nums, final_values[attributes[1]], label=attributeLabels[1], color='steelblue')
+	plt.plot(nums, final_val_values[val_attributes[1]], label=val_attributeLabels[1], linestyle='dashed', color='steelblue')
 	plt.xlabel("Window Width")
 	plt.ylabel("Accuracy")
 	plt.title("{}Accuracy for Varying Window Widths".format(title), fontsize=14)
@@ -138,8 +138,8 @@ def gen_training_graphs(val = False):
 	plt.show()
 
 	# Plot the final values for loss
-	plt.plot(nums, final_values[attributes[0]], label=attributeLabels[0], color='blueviolet')
-	plt.plot(nums, final_val_values[val_attributes[0]], label=val_attributeLabels[0], linestyle='dashed', color='blueviolet')
+	plt.plot(nums, final_values[attributes[0]], label=attributeLabels[0], color='olivedrab')
+	plt.plot(nums, final_val_values[val_attributes[0]], label=val_attributeLabels[0], linestyle='dashed', color='olivedrab')
 	plt.xlabel("Window Width")
 	plt.ylabel("Cross-Entropy")
 	plt.title("{}Loss for Varying Window Widths".format(title), fontsize=14)
@@ -401,8 +401,8 @@ def gen_confmat_derived_graphs():
 
 if __name__ == '__main__':
 	# List all log directories to use
-	gen_training_graphs(val = False)
+	# gen_training_graphs(val = False)
 	test_data_nums = ['0_5', '1_0', '1_5', '2_0', '2_5', '3_0', '3_5', '4_0', '4_5']
 
-	# gen_testing_graphs_and_confmats(test_data_nums)
+	gen_testing_graphs_and_confmats(test_data_nums)
 	# gen_confmat_derived_graphs()
