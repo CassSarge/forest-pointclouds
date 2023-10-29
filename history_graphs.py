@@ -73,7 +73,7 @@ def gen_training_graphs(val = False):
 		IoUattributes = ["val_meanIoU", "val_FoliageIoU", "val_StemIoU", "val_GroundIoU", "val_UndergrowthIoU"]
 		title = "Validation "
 
-	# title = "Training and Validation "
+	title = "Training and Validation "
 
 	val_attributes = ["val_loss", "val_sparse_cat_acc", "val_meanIoU", "val_FoliageIoU", "val_StemIoU", "val_GroundIoU", "val_UndergrowthIoU"]
 	val_IoUattributes = ["val_meanIoU", "val_FoliageIoU", "val_StemIoU", "val_GroundIoU", "val_UndergrowthIoU"]
@@ -101,29 +101,30 @@ def gen_training_graphs(val = False):
 	for attribute in IoUattributes:
 		colour = colours[IoUattributes.index(attribute)]
 		plt.plot(nums, final_values[attribute], label=attribute, color=colour)
-		# plt.plot(nums, final_val_values[val_IoUattributes[IoUattributes.index(attribute)]], label=val_IoUattributes[IoUattributes.index(attribute)], linestyle='dashed', color=colour)
+		plt.plot(nums, final_val_values[val_IoUattributes[IoUattributes.index(attribute)]], label=val_IoUattributes[IoUattributes.index(attribute)], linestyle='dashed', color=colour)
 	plt.xlabel("Window Width")
 	plt.ylabel("IoU")
 	plt.title("Final {}IoU Values Across Experiments".format(title), fontsize=14)
-	plt.legend()
+	# Legend in the bottom right
+	plt.legend(loc='lower right')
 	plt.grid()
 	plt.ylim(0, 1)
 	plt.show()
 
 	# Plot the final values for sparse categorical accuracy
 	plt.plot(nums, final_values[attributes[1]], label=attributes[1])
-	# plt.plot(nums, final_val_values[val_attributes[1]], label=val_attributes[1], linestyle='dashed')
+	plt.plot(nums, final_val_values[val_attributes[1]], label=val_attributes[1], linestyle='dashed')
 	plt.xlabel("Window Width")
 	plt.ylabel("Accuracy")
 	plt.title("Final {}Accuracy Values Across Experiments".format(title), fontsize=14)
 	plt.legend()
 	plt.grid()
-	plt.ylim(0, 1)
+	plt.ylim(0.8, 1)
 	plt.show()
 
 	# Plot the final values for loss
 	plt.plot(nums, final_values[attributes[0]], label=attributes[0])
-	# plt.plot(nums, final_val_values[val_attributes[0]], label=val_attributes[0], linestyle='dashed')
+	plt.plot(nums, final_val_values[val_attributes[0]], label=val_attributes[0], linestyle='dashed')
 	plt.xlabel("Window Width")
 	plt.ylabel("Cross-Entropy")
 	plt.title("Final {}Loss Values Across Experiments".format(title), fontsize=14)
