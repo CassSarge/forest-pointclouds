@@ -61,23 +61,27 @@ def plot_result(history, item, window_width: None):
 
 def gen_training_graphs(val = False):
 	nums = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5]
+	numLabels = ["0.5m", "1.0m", "1.5m", "2.0m", "2.5m", "3.0m", "3.5m", "4.0m", "4.5m"]
 	dirs = ["trees_{}".format(num) for num in nums]
 
 	# List all attributes for each history
 	if val == False:
 		attributes = ["loss", "sparse_cat_acc", "meanIoU", "FoliageIoU", "StemIoU", "GroundIoU", "UndergrowthIoU"]
-		IoUattributes = ["meanIoU", "FoliageIoU", "StemIoU", "GroundIoU", "UndergrowthIoU"]
+		attributeLabels = ["Training Loss", "Training Accuracy", "Training mean IoU", "Training Foliage IoU", "Training Stem IoU", "Training Ground IoU", "Training Undergrowth IoU"]
+		IoULabels= ["Training Foliage IoU", "Training Stem IoU", "Training Ground IoU", "Training Undergrowth IoU"]
+		IoUattributes = ["FoliageIoU", "StemIoU", "GroundIoU", "UndergrowthIoU"]
 		title = "Training "
 	elif val == True:
 		attributes = ["val_loss", "val_sparse_cat_acc", "val_meanIoU", "val_FoliageIoU", "val_StemIoU", "val_GroundIoU", "val_UndergrowthIoU"]
-		IoUattributes = ["val_meanIoU", "val_FoliageIoU", "val_StemIoU", "val_GroundIoU", "val_UndergrowthIoU"]
+		IoUattributes = ["val_FoliageIoU", "val_StemIoU", "val_GroundIoU", "val_UndergrowthIoU"]
 		title = "Validation "
 
 	title = "Training and Validation "
 
 	val_attributes = ["val_loss", "val_sparse_cat_acc", "val_meanIoU", "val_FoliageIoU", "val_StemIoU", "val_GroundIoU", "val_UndergrowthIoU"]
-	val_IoUattributes = ["val_meanIoU", "val_FoliageIoU", "val_StemIoU", "val_GroundIoU", "val_UndergrowthIoU"]
-
+	val_IoUattributes = ["val_FoliageIoU", "val_StemIoU", "val_GroundIoU", "val_UndergrowthIoU"]
+	val_attributeLabels = ["Validation Loss", "Validation Accuracy", "Validation mean IoU", "Validation Foliage IoU", "Validation Stem IoU", "Validation Ground IoU", "Validation Undergrowth IoU"]
+	val_IoUattributeLabels = ["Validation Foliage IoU", "Validation Stem IoU", "Validation Ground IoU", "Validation Undergrowth IoU"]
 
 	# Create a dictionary to store the final values for each attribute
 	final_values = {attribute: [] for attribute in attributes}
@@ -97,37 +101,48 @@ def gen_training_graphs(val = False):
 		# print("\n")
 
 	# Plot the final values for IoU
-	colours = ['b', 'g', 'r', 'c', 'm']
+	colours = ['lime', 'red', 'blue', 'cyan']
 	for attribute in IoUattributes:
 		colour = colours[IoUattributes.index(attribute)]
-		plt.plot(nums, final_values[attribute], label=attribute, color=colour)
-		plt.plot(nums, final_val_values[val_IoUattributes[IoUattributes.index(attribute)]], label=val_IoUattributes[IoUattributes.index(attribute)], linestyle='dashed', color=colour)
+		plt.plot(nums, final_values[attribute], label=IoULabels[IoUattributes.index(attribute)], color=colour)
+		plt.plot(nums, final_val_values[val_IoUattributes[IoUattributes.index(attribute)]], label=val_IoUattributeLabels[IoUattributes.index(attribute)], linestyle='dashed', color=colour)
 	plt.xlabel("Window Width")
 	plt.ylabel("IoU")
-	plt.title("Final {}IoU Values Across Experiments".format(title), fontsize=14)
+	plt.title("{}IoU for Varying Window Widths".format(title), fontsize=14)
 	# Legend in the bottom right
 	plt.legend(loc='lower right')
 	plt.grid()
 	plt.ylim(0, 1)
 	plt.show()
 
-	# Plot the final values for sparse categorical accuracy
-	plt.plot(nums, final_values[attributes[1]], label=attributes[1])
-	plt.plot(nums, final_val_values[val_attributes[1]], label=val_attributes[1], linestyle='dashed')
+	# Plot the final values for mean IoU only
+	plt.plot(nums, final_values[attributes[2]], label=attributeLabels[2], color = 'blueviolet')
+	plt.plot(nums, final_val_values[val_attributes[2]], label=val_attributeLabels[2], linestyle='dashed', color = 'blueviolet')
 	plt.xlabel("Window Width")
-	plt.ylabel("Accuracy")
-	plt.title("Final {}Accuracy Values Across Experiments".format(title), fontsize=14)
+	plt.ylabel("IoU")
+	plt.title("{}Mean IoU for Varying Window Widths".format(title), fontsize=14)
 	plt.legend()
 	plt.grid()
-	plt.ylim(0.8, 1)
+	plt.ylim(0, 1)
+	plt.show()
+
+	# Plot the final values for sparse categorical accuracy
+	plt.plot(nums, final_values[attributes[1]], label=attributeLabels[1], color='blueviolet')
+	plt.plot(nums, final_val_values[val_attributes[1]], label=val_attributeLabels[1], linestyle='dashed', color='blueviolet')
+	plt.xlabel("Window Width")
+	plt.ylabel("Accuracy")
+	plt.title("{}Accuracy for Varying Window Widths".format(title), fontsize=14)
+	plt.legend()
+	plt.grid()
+	plt.ylim(0, 1)
 	plt.show()
 
 	# Plot the final values for loss
-	plt.plot(nums, final_values[attributes[0]], label=attributes[0])
-	plt.plot(nums, final_val_values[val_attributes[0]], label=val_attributes[0], linestyle='dashed')
+	plt.plot(nums, final_values[attributes[0]], label=attributeLabels[0], color='blueviolet')
+	plt.plot(nums, final_val_values[val_attributes[0]], label=val_attributeLabels[0], linestyle='dashed', color='blueviolet')
 	plt.xlabel("Window Width")
 	plt.ylabel("Cross-Entropy")
-	plt.title("Final {}Loss Values Across Experiments".format(title), fontsize=14)
+	plt.title("{}Loss for Varying Window Widths".format(title), fontsize=14)
 	plt.legend()
 	plt.grid()
 	plt.ylim(0, 1)
@@ -137,11 +152,11 @@ def gen_training_graphs(val = False):
 	for dir in dirs:
 		with open('./logs/{}/trainHistoryDict'.format(dir), 'rb') as f:
 			history = pickle.load(f)
-			plt.plot(history[attributes[2]], label=nums[dirs.index(dir)])
+			plt.plot(history[attributes[2]], label=numLabels[dirs.index(dir)])
 
 	plt.xlabel("Epochs")
 	plt.ylabel("IoU")
-	plt.title("{}Mean IoU Across Epochs".format(title), fontsize=14)
+	plt.title("Training Mean IoU Across Epochs".format(title), fontsize=14)
 	plt.legend()
 	plt.grid()
 	plt.ylim(0.5, 1)
@@ -150,11 +165,11 @@ def gen_training_graphs(val = False):
 	for dir in dirs:
 		with open('./logs/{}/trainHistoryDict'.format(dir), 'rb') as f:
 			history = pickle.load(f)
-			plt.plot(history[attributes[0]], label=nums[dirs.index(dir)])
+			plt.plot(history[attributes[0]], label=numLabels[dirs.index(dir)])
 
 	plt.xlabel("Epochs")
 	plt.ylabel("Cross-Entropy")
-	plt.title("{}Loss Across Epochs".format(title), fontsize=14)
+	plt.title("Training Loss Across Epochs".format(title), fontsize=14)
 	plt.legend()
 	plt.grid()
 	plt.ylim(0, 1)
@@ -163,11 +178,11 @@ def gen_training_graphs(val = False):
 	for dir in dirs:
 		with open('./logs/{}/trainHistoryDict'.format(dir), 'rb') as f:
 			history = pickle.load(f)
-			plt.plot(history[attributes[1]], label=nums[dirs.index(dir)])
+			plt.plot(history[attributes[1]], label=numLabels[dirs.index(dir)])
 
 	plt.xlabel("Epochs")
 	plt.ylabel("Accuracy")
-	plt.title("{}Accuracy Across Epochs".format(title), fontsize=14)
+	plt.title("Training Accuracy Across Epochs".format(title), fontsize=14)
 	plt.legend()
 	plt.grid()
 	plt.ylim(0, 1)
