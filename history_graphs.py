@@ -20,7 +20,6 @@ def plot_confusion_matrix(confmat, title='Confusion matrix'):
 	names = ['Foliage', 'Stem', 'Ground', 'Undergrowth']
 	ax.set_xticklabels(names)
 	ax.set_yticklabels(names)
-	# Set title
 	plt.title('Normalised ' + title)
 
 	ax = figure.add_subplot(121)
@@ -32,8 +31,6 @@ def plot_confusion_matrix(confmat, title='Confusion matrix'):
 	names = ['Foliage', 'Stem', 'Ground', 'Undergrowth']
 	ax.set_xticklabels(names)
 	ax.set_yticklabels(names)
-
-	# Same title with 'Normalised ' before it
 	plt.title(title)
 
 	plt.show()
@@ -251,7 +248,7 @@ def gen_testing_graphs_and_confmats(test_data_nums):
 	plt.ylabel('Loss')
 	plt.title('Loss across Window Widths on Testing Data', fontsize=14)
 	plt.grid()
-	# plt.ylim(0, 1)
+	plt.ylim(0, 1)
 	plt.show()
 
 	# Make an empty dictionary to store the stats with the data nums as the keys
@@ -385,11 +382,11 @@ def gen_confmat_derived_graphs():
 	plt.ylim(0, 1)
 	plt.show()
 
-	plt.plot(window_widths, normalised_mean_ious, label='Mean', color='b')
-	plt.plot(window_widths, normalised_foliage_ious, label='Foliage', color='g')
-	plt.plot(window_widths, normalised_stem_ious, label='Stem', color='r')
-	plt.plot(window_widths, normalised_ground_ious, label='Ground', color='c')
-	plt.plot(window_widths, normalised_undergrowth_ious, label='Undergrowth', color='m')
+	plt.plot(window_widths, normalised_mean_ious, label='Mean', color='blueviolet')
+	plt.plot(window_widths, normalised_foliage_ious, label='Foliage', color='lime')
+	plt.plot(window_widths, normalised_stem_ious, label='Stem', color='red')
+	plt.plot(window_widths, normalised_ground_ious, label='Ground', color='blue')
+	plt.plot(window_widths, normalised_undergrowth_ious, label='Undergrowth', color='cyan')
 	plt.xlabel("Window Width")
 	plt.ylabel("Normalised IoU")
 	plt.title("Normalised IoU Across Window Widths")
