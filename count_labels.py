@@ -7,10 +7,10 @@ import matplotlib.pyplot as plt
 
 def count_labels(filename, batch_size, window_width):
     # Load the dataset
-    dataset_train= tf.data.TFRecordDataset(filename)
+    dataset= tf.data.TFRecordDataset(filename)
 
     # Prepare dataset
-    dataset_train = prepare_data(dataset_train, batch_size)
+    dataset = prepare_data(dataset, batch_size)
 
     # Number of points in each window
     num_points = 8192
@@ -22,12 +22,12 @@ def count_labels(filename, batch_size, window_width):
     #     3: 'Undergrowth'
     # }
 
-    train_length = dataset_train.reduce(0, lambda x, _: x + 1)
-    print("Train length: {}".format(train_length))
+    dataset_length = dataset.reduce(0, lambda x, _: x + 1)
+    print("Dataset length: {}".format(dataset_length))
 
     occurance_list = []
 
-    for points, labels in dataset_train:
+    for points, labels in dataset:
         # Count how many times each label occurs in the batch
         for label_list in labels: # Loop through the 16 windows in the batch
             label_list = label_list.numpy().astype(int).squeeze()
@@ -40,11 +40,11 @@ def count_labels(filename, batch_size, window_width):
 
     # Save history as a list of lists
     occurance_list = [[d.get(i, 0) for i in range(4)] for d in occurance_list]
-    with open('./logs/occurance_lists/occurance_list_test_{}'.format(window_width), 'wb') as f:
+    with open('./logs/occurance_lists/occurance_list_train_{}'.format(window_width), 'wb') as f:
        pickle.dump(occurance_list, f)
 
 def plot_label_occurances(window_width):
-    with open('./logs/occurance_lists/occurance_list_test_{}'.format(window_width), 'rb') as f:
+    with open('./logs/occurance_lists/occurance_list_train_{}'.format(window_width), 'rb') as f:
         occurance_list = pickle.load(f)
 
     occurance_list = np.array(occurance_list)
@@ -57,7 +57,7 @@ def plot_label_occurances(window_width):
     ax.set_xticklabels(['Foliage', 'Stem', 'Ground', 'Undergrowth'])
     ax.set_ylabel("Percent of points")
     ax.set_xlabel("Label")
-    ax.set_title("Occurance of Labels in Test Data with Window Width {}m".format(window_width.replace('_', '.')))
+    ax.set_title("Occurance of Labels in Training Data with Window Width {}m".format(window_width.replace('_', '.')))
     plt.show()
 
 def plot_all_label_means(window_widths):
@@ -66,7 +66,7 @@ def plot_all_label_means(window_widths):
 
 
     for window_width in window_widths:
-        with open('./logs/occurance_lists/occurance_list_test_{}'.format(window_width), 'rb') as f:
+        with open('./logs/occurance_lists/occurance_list_train_{}'.format(window_width), 'rb') as f:
             occurance_list = pickle.load(f)
             # Get the mean of each label
             occurance_list = np.array(occurance_list)
@@ -89,8 +89,8 @@ def plot_all_label_means(window_widths):
     ax.set_xticklabels(window_nums)
     ax.set_ylabel("Percent of points")
     ax.set_xlabel("Window width (m)")
-    ax.set_title("Occurance of Labels in Test Data")
-    ax.legend(['Foliage', 'Stem', 'Ground', 'Undergrowth'], loc='upper left', bbox_to_anchor=(0.65, 0.9))
+    ax.set_title("Occurance of Labels in Training Data")
+    ax.legend(['Foliage', 'Stem', 'Ground', 'Undergrowth'], loc='upper left', bbox_to_anchor=(0.65, 0.4))
     plt.show()
 
     
@@ -101,10 +101,14 @@ if __name__ == "__main__":
 
     window_widths = ["0_5", "1_0", "1_5", "2_0", "2_5", "3_0", "3_5", "4_0", "4_5"]
 
-    for window_width in window_widths:
-    #     print("Window width: {}".format(window_width))
-    #     filename = 'data/test_data/testing_data_{}.tfrecord'.format(window_width)
-    #     count_labels(filename, batch_size, window_width)
-        plot_label_occurances(window_width)
+    # for window_width in window_widths:
+        # print("Window width: {}".format(window_width))
+        # filename = 'data/test_data/testing_data_{}.tfrecord'.format(window_width)
+        # count_labels(filename, batch_size, window_width)
+        # plot_label_occurances(window_width)
 
-    # plot_all_label_means(window_widths)
+    # window_width = "0_5"
+    # filename = 'data/training_data.tfrecord'
+    # count_labels(filename, batch_size, window_width)
+
+    plot_all_label_means(window_widths)
