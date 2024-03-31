@@ -1,6 +1,6 @@
 # forest-pointclouds
 
-Forest 3D Pointcloud Perception and Deep Learning for my undergraduate thesis in Mechatronics Engineering, Majoring in Space Engineering (Honours)
+Uses Pointnet++ as implemented by [dgriffiths3](https://github.com/dgriffiths3/pointnet2-tensorflow2) in order to analyse how changing the size of the xy-window used in semantic segmentation of a large forest point cloud impacts overall results. My contributions were made in service of my thesis "Forest for the Trees: Semantic Segmentation of LiDAR Point Clouds in Complex Forest Environments", for my honours undergraduate in Mechatronics Engineering, Majoring in Space Engineering. This thesis was produced with guidance from Dr Mitch Bryson and would not have been possible without his work.
 
 ## Usage
 For testing the setup is correct and everything is installed:
